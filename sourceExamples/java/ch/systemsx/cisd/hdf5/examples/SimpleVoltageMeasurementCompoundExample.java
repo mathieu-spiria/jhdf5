@@ -63,17 +63,15 @@ public class SimpleVoltageMeasurementCompoundExample
     public static void main(String[] args)
     {
         // Open "singleVoltageMeasurement.h5" for writing
-        IHDF5SimpleWriter hdf5Writer = HDF5Factory.open("singleVoltageMeasurement.h5");
-
-        // Write a measurement
-        hdf5Writer.writeCompound("measurement", new Measurement(new Date(), 18.6f, 15.38937516));
-
-        // See what we've written out
-        System.out.println("Compound measurement record: "
-                + hdf5Writer.readCompound("measurement", Measurement.class));
-
-        // Close the HDF5 writer
-        hdf5Writer.close();
+        try (IHDF5SimpleWriter hdf5Writer = HDF5Factory.open("singleVoltageMeasurement.h5"))
+        {
+            // Write a measurement
+            hdf5Writer.writeCompound("measurement", new Measurement(new Date(), 18.6f, 15.38937516));
+    
+            // See what we've written out
+            System.out.println("Compound measurement record: "
+                    + hdf5Writer.readCompound("measurement", Measurement.class));
+        }
     }
 
 }

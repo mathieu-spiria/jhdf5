@@ -30,19 +30,21 @@ public class AttributeExample
     public static void main(String[] args)
     {
         // Write a String dataset.
-        IHDF5Writer writer = HDF5Factory.configure("attribute.h5").writer();
-        writer.string().write("a string", "Just some random string.");
-        // Set two attributes on it.
-        writer.bool().setAttr("a string", "important", false);
-        writer.time().setAttr("a string", "timestamp", System.currentTimeMillis());
-        writer.close();
+        try (IHDF5Writer writer = HDF5Factory.configure("attribute.h5").writer())
+        {
+            writer.string().write("a string", "Just some random string.");
+            // Set two attributes on it.
+            writer.bool().setAttr("a string", "important", false);
+            writer.time().setAttr("a string", "timestamp", System.currentTimeMillis());
+        }
 
         // Read the dataset and the attributes.
-        IHDF5Reader reader = HDF5Factory.openForReading("attribute.h5");
-        System.out.println(reader.string().read("a string"));
-        System.out.println(reader.bool().getAttr("a string", "important"));
-        System.out.println(reader.time().getAttr("a string", "timestamp"));
-        reader.close();
+        try (IHDF5Reader reader = HDF5Factory.openForReading("attribute.h5"))
+        {
+            System.out.println(reader.string().read("a string"));
+            System.out.println(reader.bool().getAttr("a string", "important"));
+            System.out.println(reader.time().getAttr("a string", "timestamp"));
+        }
     }
 
 }

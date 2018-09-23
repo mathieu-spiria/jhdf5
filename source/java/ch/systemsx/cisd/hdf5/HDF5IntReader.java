@@ -327,6 +327,7 @@ class HDF5IntReader implements IHDF5IntReader
         assert dataSet != null;
 
         baseReader.checkOpen();
+        baseReader.checkDimensions(dataSet, new long[] { blockSize }, new long[] { offset });
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
                 @Override
@@ -672,6 +673,7 @@ class HDF5IntReader implements IHDF5IntReader
         assert offset != null;
 
         baseReader.checkOpen();
+        baseReader.checkDimensions(dataSet, MDArray.toLong(blockDimensions), offset);
         final ICallableWithCleanUp<MDIntArray> readCallable = new ICallableWithCleanUp<MDIntArray>()
             {
                 @Override

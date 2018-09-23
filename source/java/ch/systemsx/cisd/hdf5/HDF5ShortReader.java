@@ -327,6 +327,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         assert dataSet != null;
 
         baseReader.checkOpen();
+        baseReader.checkDimensions(dataSet, new long[] { blockSize }, new long[] { offset });
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
                 @Override
@@ -672,6 +673,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         assert offset != null;
 
         baseReader.checkOpen();
+        baseReader.checkDimensions(dataSet, MDArray.toLong(blockDimensions), offset);
         final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
             {
                 @Override

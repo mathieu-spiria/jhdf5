@@ -34,7 +34,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  * This is a more advanced example which demonstrates reading and writing of a "compound" data set
  * that stores a temperature / voltage measurement point.
  */
-public class FullVoltageMeasurementCompoundExample
+public class FullVoltageMeasurementCompoundExample implements AutoCloseable
 {
 
     /**
@@ -126,7 +126,7 @@ public class FullVoltageMeasurementCompoundExample
         }
     }
 
-    void close()
+    public void close()
     {
         hdf5Reader.close();
     }
@@ -255,44 +255,46 @@ public class FullVoltageMeasurementCompoundExample
     public static void main(String[] args)
     {
         // Open "voltageMeasurements.h5" for writing
-        FullVoltageMeasurementCompoundExample e =
-                new FullVoltageMeasurementCompoundExample("voltageMeasurements.h5", false);
-        e.writeMeasurement("/experiment3/measurement1", new Date(), 18.6f, 15.38937516,
-                "Temperature measurement seems to be flaky.");
-        // See what we've written out
-        System.out.println("Compound record: " + e.readMeasurement("/experiment3/measurement1"));
-
-        // Alternative approaches to writing a compound data set
-        // Note: all of those use their own compound data type.
-        // If you rely on all having the same compound data type, you need to specify 
-        e.writeMeasurementAsMap("/experiment3/measurement2", new Date(
-                System.currentTimeMillis() - 10000L), 18.5f, 12.74630652, "-");
-        e.writeMeasurementAsList("/experiment3/measurement3", new Date(
-                System.currentTimeMillis() - 20000L), 18.1f, 11.275649054, "-");
-        e.writeMeasurementAsArray("/experiment3/measurement4", new Date(
-                System.currentTimeMillis() - 30000L), 17.84f, 9.58736193, "-");
-        e.close();
+        try (FullVoltageMeasurementCompoundExample e =
+                new FullVoltageMeasurementCompoundExample("voltageMeasurements.h5", false))
+        {
+            e.writeMeasurement("/experiment3/measurement1", new Date(), 18.6f, 15.38937516,
+                    "Temperature measurement seems to be flaky.");
+            // See what we've written out
+            System.out.println("Compound record: " + e.readMeasurement("/experiment3/measurement1"));
+    
+            // Alternative approaches to writing a compound data set
+            // Note: all of those use their own compound data type.
+            // If you rely on all having the same compound data type, you need to specify 
+            e.writeMeasurementAsMap("/experiment3/measurement2", new Date(
+                    System.currentTimeMillis() - 10000L), 18.5f, 12.74630652, "-");
+            e.writeMeasurementAsList("/experiment3/measurement3", new Date(
+                    System.currentTimeMillis() - 20000L), 18.1f, 11.275649054, "-");
+            e.writeMeasurementAsArray("/experiment3/measurement4", new Date(
+                    System.currentTimeMillis() - 30000L), 17.84f, 9.58736193, "-");
+        }
 
         // Open "voltageMeasurements.h5" for reading
-        FullVoltageMeasurementCompoundExample eRO =
-                new FullVoltageMeasurementCompoundExample("voltageMeasurements.h5", true);
-        // Note that we have specified CompoundElement and set a different member name for the
-        // fields "temperature" and "voltage"
-        System.out.println("Compound record as map: "
-                + eRO.readMeasurementToMap("/experiment3/measurement1"));
-        System.out.println("Compound record as list: "
-                + eRO.readMeasurementToList("/experiment3/measurement1"));
-        System.out.println("Compound record as an array: "
-                + ArrayUtils.toString(eRO.readMeasurementToArray("/experiment3/measurement1")));
-
-        // Print the other measurements records, it doesn't matter how they got written
-        System.out.println("Second compound record: "
-                + eRO.readMeasurement("/experiment3/measurement2"));
-        System.out.println("Third compound record: "
-                + eRO.readMeasurement("/experiment3/measurement3"));
-        System.out.println("Fourth compound record: "
-                + eRO.readMeasurement("/experiment3/measurement4"));
-        eRO.close();
+        try (FullVoltageMeasurementCompoundExample eRO =
+                new FullVoltageMeasurementCompoundExample("voltageMeasurements.h5", true))
+        {
+            // Note that we have specified CompoundElement and set a different member name for the
+            // fields "temperature" and "voltage"
+            System.out.println("Compound record as map: "
+                    + eRO.readMeasurementToMap("/experiment3/measurement1"));
+            System.out.println("Compound record as list: "
+                    + eRO.readMeasurementToList("/experiment3/measurement1"));
+            System.out.println("Compound record as an array: "
+                    + ArrayUtils.toString(eRO.readMeasurementToArray("/experiment3/measurement1")));
+    
+            // Print the other measurements records, it doesn't matter how they got written
+            System.out.println("Second compound record: "
+                    + eRO.readMeasurement("/experiment3/measurement2"));
+            System.out.println("Third compound record: "
+                    + eRO.readMeasurement("/experiment3/measurement3"));
+            System.out.println("Fourth compound record: "
+                    + eRO.readMeasurement("/experiment3/measurement4"));
+        }
     }
 
 }

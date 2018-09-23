@@ -176,6 +176,7 @@ public class HDF5RoundtripTest
         test.testFloatArraysFromTemplates();
         test.testMDShortArrayRankMismatch();
         test.testMDLongArrayArrayIndexOutOfBounds();
+        test.testMDLongArrayOnReadArrayIndexOutOfBounds();
         test.testFloatMDArraysDetachedDataSets();
         test.testFloatMDArraysFromTemplates();
         test.testBitFieldArray();
@@ -3257,23 +3258,27 @@ public class HDF5RoundtripTest
     @Test(expectedExceptions = { HDF5SpaceRankMismatch.class })
     public void testMDShortArrayRankMismatch()
     {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final File shortArrayFile = new File(workingDirectory, "MDShortArrayRankMismatch.h5");
         shortArrayFile.delete();
         assertFalse(shortArrayFile.exists());
         shortArrayFile.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(shortArrayFile);
-        final MDShortArray dataWritten = new MDShortArray(new int[] { 2, 2, 2 });
-        try (final HDF5DataSet ds = writer.uint16().createMDArrayAndOpen("ds", new int[] { 4, 2 })) 
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(shortArrayFile))
         {
-            fillArray((short) 7, dataWritten.getAsFlatArray());
-            // Will fail with an HDF5SpaceRankException as the data set is of rank 3, but the data are of rank 2.
-            writer.uint16().writeMDArrayBlock(ds, dataWritten, dataWritten.longDimensions());
+            final MDShortArray dataWritten = new MDShortArray(new int[] { 2, 2, 2 });
+            try (final HDF5DataSet ds = writer.uint16().createMDArrayAndOpen("ds", new int[] { 4, 2 })) 
+            {
+                fillArray((short) 7, dataWritten.getAsFlatArray());
+                // Will fail with an HDF5SpaceRankException as the data set is of rank 3, but the data are of rank 2.
+                writer.uint16().writeMDArrayBlock(ds, dataWritten, dataWritten.longDimensions());
+            }
         }
     }
 
     @Test(expectedExceptions = { ArrayIndexOutOfBoundsException.class })
     public void testMDLongArrayArrayIndexOutOfBounds()
     {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final File longArrayFile = new File(workingDirectory, "MDLongArrayArrayIndexOutOfBounds.h5");
         longArrayFile.delete();
         assertFalse(longArrayFile.exists());
@@ -3287,6 +3292,35 @@ public class HDF5RoundtripTest
                 // Will fail with an ArrayIndexOutOfBoundsException as the data are larger than the data set.
                 writer.int64().writeMDArrayBlock(ds, dataWritten, new long[] { 0, 1, 0 });
             }
+        }
+    }
+    
+    @Test(expectedExceptions = { ArrayIndexOutOfBoundsException.class })
+    public void testMDLongArrayOnReadArrayIndexOutOfBounds()
+    {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
+        final File longArrayFile = new File(workingDirectory, "MDLongArrayOnReadArrayIndexOutOfBounds.h5");
+        longArrayFile.delete();
+        assertFalse(longArrayFile.exists());
+        longArrayFile.deleteOnExit();
+        final int[] dimensions = new int[] { 2, 2, 2 };
+        final MDLongArray dataWritten = new MDLongArray(dimensions);
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(longArrayFile))
+        {
+            try (final HDF5DataSet ds = writer.int64().createMDArrayAndOpen("ds", dimensions, HDF5IntStorageFeatures.INT_COMPACT)) 
+            {
+                fillArray(7, dataWritten.getAsFlatArray());
+                writer.int64().writeMDArrayBlock(ds, dataWritten, new long[] { 0, 0, 0 });
+            }
+        }
+        try (final IHDF5Reader reader = HDF5FactoryProvider.get().open(longArrayFile))
+        {
+            try (final HDF5DataSet ds = reader.object().openDataSet("ds")) 
+            {
+                fillArray(7, dataWritten.getAsFlatArray());
+                reader.int64().readMDArrayBlock(ds, dimensions, new long[] { 0, 1, 0 });
+            }
+            
         }
     }
     
@@ -3749,6 +3783,7 @@ public class HDF5RoundtripTest
     @Test
     public void testVeryLargeString()
     {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final File veryLargeStringFile = new File(workingDirectory, "veryLargeString.h5");
         veryLargeStringFile.delete();
         assertFalse(veryLargeStringFile.exists());
@@ -9396,6 +9431,7 @@ public class HDF5RoundtripTest
     @Test
     public void testMatrixCompound()
     {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final File file = new File(workingDirectory, "compoundWithMatrix.h5");
         file.delete();
         assertFalse(file.exists());

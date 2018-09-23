@@ -39,35 +39,36 @@ public class BlockwiseMatrixExample
         int[][] mydata = new int[10][10];
 
         // Write the integer matrix.
-        IHDF5Writer writer = HDF5Factory.open("largeimatrix.h5");
-        // Define the block size as 10 x 10.
-        writer.int32().createMatrix("mydata", 10, 10);
-        // Write 5 x 7 blocks.
-        for (int bx = 0; bx < 5; ++bx)
+        try (IHDF5Writer writer = HDF5Factory.open("largeimatrix.h5"))
         {
-            for (int by = 0; by < 7; ++by)
+            // Define the block size as 10 x 10.
+            writer.int32().createMatrix("mydata", 10, 10);
+            // Write 5 x 7 blocks.
+            for (int bx = 0; bx < 5; ++bx)
             {
-                fillMatrix(rng, mydata);
-                writer.int32().writeMatrixBlock("mydata", mydata, bx, by);
+                for (int by = 0; by < 7; ++by)
+                {
+                    fillMatrix(rng, mydata);
+                    writer.int32().writeMatrixBlock("mydata", mydata, bx, by);
+                }
             }
         }
-        writer.close();
 
         // Read the matrix in again, using the "natural" 10 x 10 blocks.
-        IHDF5Reader reader = HDF5Factory.openForReading("largeimatrix.h5");
-        for (HDF5MDDataBlock<MDIntArray> block : reader.int32().getMDArrayNaturalBlocks("mydata"))
+        try (IHDF5Reader reader = HDF5Factory.openForReading("largeimatrix.h5"))
         {
-            System.out.println(ArrayUtils.toString(block.getIndex()) + " -> "
-                    + block.getData().toString());
+            for (HDF5MDDataBlock<MDIntArray> block : reader.int32().getMDArrayNaturalBlocks("mydata"))
+            {
+                System.out.println(ArrayUtils.toString(block.getIndex()) + " -> "
+                        + block.getData().toString());
+            }
+    
+            // Read a 1d sliced block of size 10 where the first index is fixed
+            System.out.println(reader.int32().readSlicedMDArrayBlock("mydata", new int[]
+                { 10 }, new long[]
+                { 4 }, new long[]
+                { 30, -1 }));
         }
-
-        // Read a 1d sliced block of size 10 where the first index is fixed
-        System.out.println(reader.int32().readSlicedMDArrayBlock("mydata", new int[]
-            { 10 }, new long[]
-            { 4 }, new long[]
-            { 30, -1 }));
-
-        reader.close();
     }
 
     static void fillMatrix(Random rng, int[][] mydata)

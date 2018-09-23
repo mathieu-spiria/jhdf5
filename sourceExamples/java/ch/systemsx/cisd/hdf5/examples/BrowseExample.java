@@ -58,26 +58,28 @@ public class BrowseExample
     public static void main(String[] args)
     {
         // Create an HDF5 file we can browse.
-        IHDF5Writer writer = HDF5Factory.configure("browsing.h5").overwrite().writer();
-        writer.object().createGroup("groupA");
-        writer.object().createGroup("groupB");
-        writer.object().createGroup("groupA/groupC");
-        writer.string().write("/groupA/string", "Just some random string.");
-        writer.int32().writeArray("/groupB/inarr", new int[]
-            { 17, 42, -1 });
-        writer.float64().writeMatrix("/groupB/dmat", new double[][]
-            {
-                { 1.1, 2.2, 3.3 },
-                { 4.4, 5.5, 6.6 },
-                { 7.7, 8.8, 9.9 }, });
-        writer.object().createSoftLink("/groupA/groupC", "/groupB/groupC");
-        writer.time().write("/groupA/date", new Date());
-        writer.close();
+        try (IHDF5Writer writer = HDF5Factory.configure("browsing.h5").overwrite().writer())
+        {
+            writer.object().createGroup("groupA");
+            writer.object().createGroup("groupB");
+            writer.object().createGroup("groupA/groupC");
+            writer.string().write("/groupA/string", "Just some random string.");
+            writer.int32().writeArray("/groupB/inarr", new int[]
+                { 17, 42, -1 });
+            writer.float64().writeMatrix("/groupB/dmat", new double[][]
+                {
+                    { 1.1, 2.2, 3.3 },
+                    { 4.4, 5.5, 6.6 },
+                    { 7.7, 8.8, 9.9 }, });
+            writer.object().createSoftLink("/groupA/groupC", "/groupB/groupC");
+            writer.time().write("/groupA/date", new Date());
+        }
 
         // Browse it.
-        IHDF5Reader reader = HDF5Factory.openForReading("browsing.h5");
-        browse(reader, reader.object().getGroupMemberInformation("/", true), "");
-        reader.close();
+        try (IHDF5Reader reader = HDF5Factory.openForReading("browsing.h5"))
+        {
+            browse(reader, reader.object().getGroupMemberInformation("/", true), "");
+        }
     }
 
 }
