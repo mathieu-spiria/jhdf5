@@ -255,6 +255,33 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
+    public int[] readToMDArrayWithOffset(final HDF5DataSet dataSet, final MDShortArray array,
+            final int[] memoryOffset)
+    {
+        assert dataSet != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
+            {
+                @Override
+                public int[] call(ICleanUpRegistry registry)
+                {
+                    final long dataSetId = dataSet.getDatasetId();
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getBlockSpaceParameters(dataSet, memoryOffset, 
+                                        array.dimensions());
+                    final long nativeDataTypeId =
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
+                            getAsFlatArray());
+                    return MDArray.toInt(spaceParams.dimensions);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
     public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDShortArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
@@ -272,6 +299,34 @@ class HDF5ShortReader implements IHDF5ShortReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
+                    final long nativeDataTypeId =
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                            .getAsFlatArray());
+                    return MDArray.toInt(spaceParams.dimensions);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public int[] readToMDArrayBlockWithOffset(final HDF5DataSet dataSet,
+            final MDShortArray array, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset)
+    {
+        assert dataSet != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
+            {
+                @Override
+                public int[] call(ICleanUpRegistry registry)
+                {
+                    final long dataSetId = dataSet.getDatasetId();
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getBlockSpaceParameters(dataSet, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions);
                     final long nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
@@ -334,7 +389,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSet, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSet, offset, blockSize);
                     final short[] data = new short[spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSet.getDatasetId(), H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -561,6 +616,18 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
+    public MDShortArray readSlicedMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] blockNumber, IndexMap boundIndices)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readSlicedMDArrayBlockWithOffset(dataSet, blockDimensions, offset, boundIndices);
+    }
+
+    @Override
     public MDShortArray readSlicedMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber, long[] boundIndices)
     {
@@ -570,6 +637,18 @@ class HDF5ShortReader implements IHDF5ShortReader
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
         return readSlicedMDArrayBlockWithOffset(objectPath, blockDimensions, offset, boundIndices);
+    }
+
+    @Override
+    public MDShortArray readSlicedMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] blockNumber, long[] boundIndices)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readSlicedMDArrayBlockWithOffset(dataSet, blockDimensions, offset, boundIndices);
     }
 
     @Override
@@ -684,7 +763,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                     {
                         final DataSpaceParameters spaceParams =
                                 baseReader.getSpaceParameters(dataSet, offset,
-                                        blockDimensions, registry);
+                                        blockDimensions);
                         final short[] dataBlock = new short[spaceParams.blockSize];
                         baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                 spaceParams.memorySpaceId, spaceParams.dataSpaceId,

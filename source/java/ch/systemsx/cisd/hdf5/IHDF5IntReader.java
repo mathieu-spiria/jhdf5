@@ -118,6 +118,18 @@ public interface IHDF5IntReader
     				MDIntArray array, int[] memoryOffset);
 
     /**
+     * Reads a multi-dimensional <code>int</code> array data set <var>objectPath</var>
+     * into a given <var>array</var> in memory.
+     * 
+     * @param dataSet The data set to read from.
+     * @param array The array to read the data into.
+     * @param memoryOffset The offset in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
+     */
+    public int[] readToMDArrayWithOffset(HDF5DataSet dataSet, 
+    				MDIntArray array, int[] memoryOffset);
+
+    /**
      * Reads a block of the multi-dimensional <code>int</code> array data set
      * <var>objectPath</var> into a given <var>array</var> in memory.
      * 
@@ -129,6 +141,21 @@ public interface IHDF5IntReader
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
     public int[] readToMDArrayBlockWithOffset(String objectPath,
+            MDIntArray array, int[] blockDimensions, long[] offset,
+            int[] memoryOffset);
+
+    /**
+     * Reads a block of the multi-dimensional <code>int</code> array data set
+     * <var>objectPath</var> into a given <var>array</var> in memory.
+     * 
+     * @param dataSet The data set to read from.
+     * @param array The array to read the data into.
+     * @param blockDimensions The size of the block to read along each axis.
+     * @param offset The offset of the block in the data set.
+     * @param memoryOffset The offset of the block in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
+     */
+    public int[] readToMDArrayBlockWithOffset(HDF5DataSet dataSet,
             MDIntArray array, int[] blockDimensions, long[] offset,
             int[] memoryOffset);
 
@@ -350,6 +377,23 @@ public interface IHDF5IntReader
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
      * given value. The returned data block only contains the free (i.e. non-fixed) indices.
      * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param blockNumber The block number in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDIntArray readSlicedMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] blockNumber, IndexMap boundIndices);
+
+    /**
+     * Reads a sliced block from a multi-dimensional <code>int</code> array from the data set
+     * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockDimensions The extent of the block in each dimension.
      * @param blockNumber The block number in each dimension (offset: multiply with the
@@ -361,6 +405,24 @@ public interface IHDF5IntReader
      * @return The data block read from the data set.
      */
     public MDIntArray readSlicedMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber, long[] boundIndices);
+
+    /**
+     * Reads a sliced block from a multi-dimensional <code>int</code> array from the data set
+     * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param blockNumber The block number in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDIntArray readSlicedMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
             long[] blockNumber, long[] boundIndices);
 
     /**

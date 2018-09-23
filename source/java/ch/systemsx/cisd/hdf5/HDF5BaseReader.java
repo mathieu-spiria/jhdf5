@@ -577,10 +577,10 @@ class HDF5BaseReader
     }
 
     /**
-     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
+     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSet</var>.
      */
-    DataSpaceParameters getSpaceParameters(final HDF5DataSet dataset, final long offset,
-            final int blockSize, ICleanUpRegistry registry)
+    DataSpaceParameters getSpaceParameters(final HDF5DataSet dataSet, final long offset,
+            final int blockSize)
     {
         final long memorySpaceId;
         final long dataSpaceId;
@@ -588,8 +588,8 @@ class HDF5BaseReader
         final long[] dimensions;
         if (blockSize > 0)
         {
-            dataSpaceId = dataset.getDataspaceId();
-            dimensions = dataset.getDimensions();
+            dataSpaceId = dataSet.getDataspaceId();
+            dimensions = dataSet.getDimensions();
             if (dimensions.length != 1)
             {
                 throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
@@ -606,14 +606,14 @@ class HDF5BaseReader
                 { effectiveBlockSize };
             h5.setHyperslabBlock(dataSpaceId, new long[]
                 { offset }, blockShape);
-            memorySpaceId = dataset.getMemorySpaceId(blockShape);
+            memorySpaceId = dataSet.getMemorySpaceId(blockShape);
             h5.setHyperslabBlock(memorySpaceId, new long[]
                 { 0 }, blockShape);
         } else
         {
             memorySpaceId = HDF5Constants.H5S_ALL;
             dataSpaceId = HDF5Constants.H5S_ALL;
-            dimensions = h5.getDataDimensions(dataset.getDatasetId(), registry);
+            dimensions = dataSet.getDimensions();
             effectiveBlockSize = getOneDimensionalArraySize(dimensions);
         }
         return new DataSpaceParameters(memorySpaceId, dataSpaceId, effectiveBlockSize, dimensions);
@@ -750,7 +750,7 @@ class HDF5BaseReader
      * <var>dataSet</var>.
      */
     DataSpaceParameters getSpaceParameters(final HDF5DataSet dataSet, final long[] offset,
-            final int[] blockDimensionsOrNull, ICleanUpRegistry registry)
+            final int[] blockDimensionsOrNull)
     {
         final long memorySpaceId;
         final long dataSpaceId;
@@ -802,6 +802,16 @@ class HDF5BaseReader
     }
 
     /**
+     * Returns the {@link DataSpaceParameters} for the given <var>dataSet</var> when they are
+     * mapped to a block in memory.
+     */
+    DataSpaceParameters getBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
+            final int[] memoryDimensions)
+    {
+        return tryGetBlockSpaceParameters(dataSet, memoryOffset, memoryDimensions, false);
+    }
+
+    /**
      * Returns the {@link DataSpaceParameters} for the given <var>dataSetId</var> when they are
      * mapped to a block in memory.
      */
@@ -815,6 +825,36 @@ class HDF5BaseReader
         final long[] dimensions = h5.getDataDimensions(dataSetId, registry);
         final long memorySpaceId =
                 h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
+        for (int i = 0; i < dimensions.length; ++i)
+        {
+            if (dimensions[i] + memoryOffset[i] > memoryDimensions[i])
+            {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
+                throw new HDF5JavaException("Dimensions " + dimensions[i] + " + memory offset "
+                        + memoryOffset[i] + " >= memory buffer " + memoryDimensions[i]);
+            }
+        }
+        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset), dimensions);
+        return new DataSpaceParameters(memorySpaceId, H5S_ALL,
+                MDAbstractArray.getLength(dimensions), dimensions);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for the given <var>dataSetId</var> when they are
+     * mapped to a block in memory.
+     */
+    DataSpaceParameters tryGetBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
+            final int[] memoryDimensions, final boolean nullWhenOutside)
+    {
+        assert memoryOffset != null;
+        assert memoryDimensions != null;
+        assert memoryDimensions.length == memoryOffset.length;
+
+        final long[] dimensions = dataSet.getDimensions();
+        final long memorySpaceId = dataSet.getMemorySpaceId(MDArray.toLong(memoryDimensions));
         for (int i = 0; i < dimensions.length; ++i)
         {
             if (dimensions[i] + memoryOffset[i] > memoryDimensions[i])
@@ -899,6 +939,78 @@ class HDF5BaseReader
         h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
         memorySpaceId =
                 h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
+        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
+                effectiveBlockDimensions);
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId,
+                MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a block of the given <var>dataSet</var> when
+     * they are mapped to a block in memory.
+     */
+    DataSpaceParameters getBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
+            final int[] memoryDimensions, final long[] offset, final int[] blockDimensions)
+    {
+        return tryGetBlockSpaceParameters(dataSet, memoryOffset, memoryDimensions, offset,
+                blockDimensions, false);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a block of the given <var>dataSet</var> when
+     * they are mapped to a block in memory.
+     */
+    DataSpaceParameters tryGetBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
+            final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
+            final boolean nullWhenOutside)
+    {
+        assert dataSet != null;
+        assert memoryOffset != null;
+        assert memoryDimensions != null;
+        assert offset != null;
+        assert blockDimensions != null;
+        assert memoryOffset.length == offset.length;
+        assert memoryDimensions.length == memoryOffset.length;
+        assert blockDimensions.length == offset.length;
+
+        final long memorySpaceId;
+        final long dataSpaceId;
+        final long[] effectiveBlockDimensions;
+
+        dataSpaceId = dataSet.getDataspaceId();
+        final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
+        if (dimensions.length != blockDimensions.length)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank "
+                    + blockDimensions.length + " (rank=" + dimensions.length + ")");
+        }
+        effectiveBlockDimensions = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            final long maxFileBlockSize = dimensions[i] - offset[i];
+            if (maxFileBlockSize <= 0)
+            {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
+                throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
+            }
+            final long maxMemoryBlockSize = memoryDimensions[i] - memoryOffset[i];
+            if (maxMemoryBlockSize <= 0)
+            {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
+                throw new HDF5JavaException("Memory offset " + memoryOffset[i] + " >= Size "
+                        + memoryDimensions[i]);
+            }
+            effectiveBlockDimensions[i] =
+                    Math.min(blockDimensions[i], Math.min(maxMemoryBlockSize, maxFileBlockSize));
+        }
+        h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
+        memorySpaceId = dataSet.getMemorySpaceId(MDArray.toLong(memoryDimensions));
         h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
                 effectiveBlockDimensions);
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,

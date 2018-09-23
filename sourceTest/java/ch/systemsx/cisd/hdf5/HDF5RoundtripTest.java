@@ -1037,14 +1037,25 @@ public class HDF5RoundtripTest
                 }
             }
         }
-        final MDFloatArray arraySliceRead1 =
-                reader.float32().readSlicedMDArrayBlock(floatDatasetName2,
-                        arraySliceWritten1.dimensions(), slicedBlock1, imap1);
-        assertEquals(arraySliceWritten1, arraySliceRead1);
-        final MDFloatArray arraySliceRead2 =
-                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName2,
-                        arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
-        assertEquals(arraySliceWritten2, arraySliceRead2);
+        try (final HDF5DataSet fds2 = reader.object().openDataSet(floatDatasetName2))
+        {
+            final MDFloatArray arraySliceRead1 =
+                    reader.float32().readSlicedMDArrayBlock(floatDatasetName2,
+                            arraySliceWritten1.dimensions(), slicedBlock1, imap1);
+            assertEquals(arraySliceWritten1, arraySliceRead1);
+            final MDFloatArray arraySliceRead1b =
+                    reader.float32().readSlicedMDArrayBlock(fds2,
+                            arraySliceWritten1.dimensions(), slicedBlock1, imap1);
+            assertEquals(arraySliceWritten1, arraySliceRead1b);
+            final MDFloatArray arraySliceRead2 =
+                    reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName2,
+                            arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
+            assertEquals(arraySliceWritten2, arraySliceRead2);
+            final MDFloatArray arraySliceRead2b =
+                    reader.float32().readSlicedMDArrayBlockWithOffset(fds2,
+                            arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
+            assertEquals(arraySliceWritten2, arraySliceRead2b);
+        }
         reader.close();
     }
 
@@ -2769,10 +2780,16 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final MDFloatArray arrayRead = new MDFloatArray(new int[]
             { 10, 10 });
+        final MDFloatArray arrayRead2 = new MDFloatArray(arrayRead.dimensions());
         final int memOfsX = 2;
         final int memOfsY = 3;
         reader.float32().readToMDArrayWithOffset(dsName, arrayRead, new int[]
             { memOfsX, memOfsY });
+        try (HDF5DataSet ds = reader.object().openDataSet(dsName))
+        {
+            reader.float32().readToMDArrayWithOffset(ds, arrayRead2, new int[]
+                    { memOfsX, memOfsY });
+        }
         reader.close();
         final boolean[][] isSet = new boolean[10][10];
         for (int i = 0; i < arrayWritten.size(0); ++i)
@@ -2782,6 +2799,8 @@ public class HDF5RoundtripTest
                 isSet[memOfsX + i][memOfsY + j] = true;
                 assertEquals("(" + i + "," + j + ")", arrayWritten.get(i, j),
                         arrayRead.get(memOfsX + i, memOfsY + j));
+                assertEquals("(" + i + "," + j + ")", arrayWritten.get(i, j),
+                        arrayRead2.get(memOfsX + i, memOfsY + j));
             }
         }
         for (int i = 0; i < arrayRead.size(0); ++i)
@@ -2791,6 +2810,7 @@ public class HDF5RoundtripTest
                 if (isSet[i][j] == false)
                 {
                     assertEquals("(" + i + "," + j + ")", 0f, arrayRead.get(i, j));
+                    assertEquals("(" + i + "," + j + ")", 0f, arrayRead2.get(i, j));
                 }
             }
         }
@@ -2865,6 +2885,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final MDFloatArray arrayRead = new MDFloatArray(new int[]
             { 10, 10 });
+        final MDFloatArray arrayReadb = new MDFloatArray(arrayRead.dimensions());
         final int memOfsX = 2;
         final int memOfsY = 3;
         final int diskOfsX = 1;
@@ -2876,9 +2897,20 @@ public class HDF5RoundtripTest
                     { blockSizeX, blockSizeY }, new long[]
                     { diskOfsX, diskOfsY }, new int[]
                     { memOfsX, memOfsY });
+        final int[] effectiveDimensionsb;
+        try (HDF5DataSet ds = reader.object().openDataSet(dsName))
+        {
+            effectiveDimensionsb =
+                    reader.float32().readToMDArrayBlockWithOffset(ds, arrayReadb, new int[]
+                        { blockSizeX, blockSizeY }, new long[]
+                        { diskOfsX, diskOfsY }, new int[]
+                        { memOfsX, memOfsY });
+        }
         reader.close();
         assertEquals(blockSizeX - 1, effectiveDimensions[0]);
         assertEquals(blockSizeY, effectiveDimensions[1]);
+        assertEquals(blockSizeX - 1, effectiveDimensionsb[0]);
+        assertEquals(blockSizeY, effectiveDimensionsb[1]);
         final boolean[][] isSet = new boolean[10][10];
         for (int i = 0; i < effectiveDimensions[0]; ++i)
         {
@@ -2887,6 +2919,8 @@ public class HDF5RoundtripTest
                 isSet[memOfsX + i][memOfsY + j] = true;
                 assertEquals("(" + i + "," + j + ")", arrayWritten.get(diskOfsX + i, diskOfsY + j),
                         arrayRead.get(memOfsX + i, memOfsY + j));
+                assertEquals("(" + i + "," + j + ")", arrayWritten.get(diskOfsX + i, diskOfsY + j),
+                        arrayReadb.get(memOfsX + i, memOfsY + j));
             }
         }
         for (int i = 0; i < arrayRead.size(0); ++i)
@@ -2896,6 +2930,7 @@ public class HDF5RoundtripTest
                 if (isSet[i][j] == false)
                 {
                     assertEquals("(" + i + "," + j + ")", 0f, arrayRead.get(i, j));
+                    assertEquals("(" + i + "," + j + ")", 0f, arrayReadb.get(i, j));
                 }
             }
         }
