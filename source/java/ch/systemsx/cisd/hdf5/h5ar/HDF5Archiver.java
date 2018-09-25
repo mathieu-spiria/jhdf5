@@ -24,6 +24,7 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -503,15 +504,15 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
-    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitorOrNull,
             VerifyParameters params)
     {
         final Set<File> filesOnFSOrNull =
-                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS,
-                        params.isRecursive()) : null;
+                (missingArchiveEntryVisitorOrNull != null)
+                    ? getFiles(Paths.get(rootDirectoryOnFS.toString(), fileOrDir).toFile(), params.isRecursive())
+                    : null;
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
                         buffer, params.isVerifyAttributes(), params.isNumeric());
@@ -536,15 +537,15 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, visitor, null, params);
     }
 
-    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor,
             IArchiveEntryVisitor missingArchiveEntryVisitorOrNull, VerifyParameters params)
     {
         final Set<File> filesOnFSOrNull =
-                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS,
-                        params.isRecursive()) : null;
+                (missingArchiveEntryVisitorOrNull != null)
+                    ? getFiles(Paths.get(rootDirectoryOnFS.toString(), fileOrDir).toFile(), params.isRecursive())
+                    : null;
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
                         rootDirectoryInArchive, buffer, params.isVerifyAttributes(),
@@ -608,21 +609,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     private static Set<File> getFiles(File fsRoot, boolean recursive)
     {
         final Set<File> result = new HashSet<File>();
-        if (recursive && fsRoot.isDirectory())
+        if (fsRoot.isDirectory())
         {
-            addFilesInDir(fsRoot, result);
+            addFilesInDir(fsRoot, result, recursive);
         }
         return result;
     }
 
-    private static void addFilesInDir(File dir, Set<File> files)
+    private static void addFilesInDir(File dir, Set<File> files, boolean recursive)
     {
         for (File f : dir.listFiles())
         {
             files.add(f);
-            if (f.isDirectory())
+            if (recursive && f.isDirectory())
             {
-                addFilesInDir(f, files);
+                addFilesInDir(f, files, recursive);
             }
         }
     }
