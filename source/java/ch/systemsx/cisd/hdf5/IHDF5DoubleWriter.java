@@ -784,6 +784,24 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
      * object only contains the free (i.e. non-fixed) indices.
      * 
+     * @param dataset The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlock(HDF5DataSet dataset, MDDoubleArray data, long[] blockNumber,
+            IndexMap boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
@@ -794,6 +812,23 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      *            indices and binds them to the values 5 and 7, respectively.
      */
     public void writeSlicedMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber,
+            long[] boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataset The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlock(HDF5DataSet dataset, MDDoubleArray data, long[] blockNumber,
             long[] boundIndices);
 
     /**
@@ -840,6 +875,23 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
      * object only contains the free (i.e. non-fixed) indices.
      * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set to start writing to in each dimension.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, MDDoubleArray data,
+            long[] offset, IndexMap boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
@@ -850,6 +902,23 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      *            binds them to the values 5 and 7, respectively.
      */
     public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
+            long[] offset, long[] boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set to start writing to in each dimension.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, MDDoubleArray data,
             long[] offset, long[] boundIndices);
 
    /**

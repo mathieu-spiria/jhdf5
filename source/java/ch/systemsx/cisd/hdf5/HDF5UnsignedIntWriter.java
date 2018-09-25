@@ -854,8 +854,8 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
     }
 
     @Override
-    public void writeMDArrayBlock(final String objectPath, final MDIntArray data,
-            final long[] blockNumber)
+    public void writeMDArrayBlock(String objectPath, MDIntArray data,
+            long[] blockNumber)
     {
         assert blockNumber != null;
 
@@ -869,8 +869,8 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
     }
 
     @Override
-    public void writeSlicedMDArrayBlock(final String objectPath, final MDIntArray data,
-            final long[] blockNumber, IndexMap boundIndices)
+    public void writeSlicedMDArrayBlock(String objectPath, MDIntArray data,
+            long[] blockNumber, IndexMap boundIndices)
     {
         assert blockNumber != null;
 
@@ -884,8 +884,23 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
     }
     
     @Override
-    public void writeSlicedMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber,
-            long[] boundIndices)
+    public void writeSlicedMDArrayBlock(HDF5DataSet dataSet, MDIntArray data,
+            long[] blockNumber, IndexMap boundIndices)
+    {
+        assert blockNumber != null;
+
+        final long[] dimensions = data.longDimensions();
+        final long[] offset = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * dimensions[i];
+        }
+        writeSlicedMDArrayBlockWithOffset(dataSet, data, offset, boundIndices);
+    }
+    
+    @Override
+    public void writeSlicedMDArrayBlock(String objectPath, MDIntArray data, 
+    		long[] blockNumber, long[] boundIndices)
     {
         assert blockNumber != null;
 
@@ -896,6 +911,21 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
             offset[i] = blockNumber[i] * dimensions[i];
         }
         writeSlicedMDArrayBlockWithOffset(objectPath, data, offset, boundIndices);
+    }
+
+    @Override
+    public void writeSlicedMDArrayBlock(HDF5DataSet dataSet, MDIntArray data, long[] blockNumber,
+            long[] boundIndices)
+    {
+        assert blockNumber != null;
+
+        final long[] dimensions = data.longDimensions();
+        final long[] offset = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * dimensions[i];
+        }
+        writeSlicedMDArrayBlockWithOffset(dataSet, data, offset, boundIndices);
     }
 
     @Override
@@ -1001,6 +1031,24 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
     }
 
     @Override
+    public void writeSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, MDIntArray data,
+            long[] offset, IndexMap boundIndices)
+    {
+        assert dataSet != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final int fullRank = dataSet.getFullRank();
+        final int[] fullBlockDimensions = new int[fullRank];
+        final long[] fullOffset = new long[fullRank];
+        MatrixUtils.createFullBlockDimensionsAndOffset(data.dimensions(), offset, boundIndices,
+                fullRank, fullBlockDimensions, fullOffset);
+        writeMDArrayBlockWithOffset(dataSet, new MDIntArray(data.getAsFlatArray(),
+                fullBlockDimensions), fullOffset);
+    }
+
+    @Override
     public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDIntArray data,
             long[] offset, long[] boundIndices)
     {
@@ -1015,6 +1063,24 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
         MatrixUtils.createFullBlockDimensionsAndOffset(data.dimensions(), offset, boundIndices,
                 fullRank, fullBlockDimensions, fullOffset);
         writeMDArrayBlockWithOffset(objectPath, new MDIntArray(data.getAsFlatArray(),
+                fullBlockDimensions), fullOffset);
+    }
+
+    @Override
+    public void writeSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, MDIntArray data,
+            long[] offset, long[] boundIndices)
+    {
+        assert dataSet != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final int fullRank = dataSet.getFullRank();
+        final int[] fullBlockDimensions = new int[fullRank];
+        final long[] fullOffset = new long[fullRank];
+        MatrixUtils.createFullBlockDimensionsAndOffset(data.dimensions(), offset, boundIndices,
+                fullRank, fullBlockDimensions, fullOffset);
+        writeMDArrayBlockWithOffset(dataSet, new MDIntArray(data.getAsFlatArray(),
                 fullBlockDimensions), fullOffset);
     }
 
