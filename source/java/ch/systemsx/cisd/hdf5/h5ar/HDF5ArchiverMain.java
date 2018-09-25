@@ -19,23 +19,23 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import hdf.hdf5lib.exceptions.HDF5JavaException;
-import hdf.hdf5lib.exceptions.HDF5LibraryException;
-
 import org.apache.commons.io.FilenameUtils;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionHandlerFilter;
 
-import ch.systemsx.cisd.args4j.Argument;
-import ch.systemsx.cisd.args4j.CmdLineException;
-import ch.systemsx.cisd.args4j.CmdLineParser;
-import ch.systemsx.cisd.args4j.ExampleMode;
-import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -116,61 +116,61 @@ public class HDF5ArchiverMain
 
     private final boolean initializationOK;
 
-    @Option(name = "i", longName = "include", metaVar = "REGEX", skipForExample = true, usage = "Regex of files to include")
+    @Option(name = "-i", aliases = "--include", metaVar = "REGEX", hidden = true, usage = "Regex of files to include")
     private List<String> fileWhiteList = new ArrayList<String>();
 
-    @Option(name = "e", longName = "exclude", metaVar = "REGEX", usage = "Regex of files to exclude")
+    @Option(name = "-e", aliases = "--exclude", metaVar = "REGEX", usage = "Regex of files to exclude")
     private List<String> fileBlackList = new ArrayList<String>();
 
-    @Option(name = "I", longName = "include-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to include")
+    @Option(name = "-I", aliases = "--include-dirs", metaVar = "REGEX", hidden = true, usage = "Regex of directories to include")
     private List<String> dirWhiteList = new ArrayList<String>();
 
-    @Option(name = "E", longName = "exclude-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to exclude")
+    @Option(name = "-E", aliases = "--exclude-dirs", metaVar = "REGEX", hidden = true, usage = "Regex of directories to exclude")
     private List<String> dirBlackList = new ArrayList<String>();
 
-    @Option(name = "c", longName = "compress", metaVar = "REGEX", skipForExample = true, usage = "Regex of files to compress")
+    @Option(name = "-c", aliases = "--compress", metaVar = "REGEX", hidden = true, usage = "Regex of files to compress")
     private List<String> compressionWhiteList = new ArrayList<String>();
 
-    @Option(name = "nc", longName = "no-compression", metaVar = "REGEX", skipForExample = true, usage = "Regex of files not to compress")
+    @Option(name = "-nc", aliases = "--no-compression", metaVar = "REGEX", hidden = true, usage = "Regex of files not to compress")
     private List<String> compressionBlackList = new ArrayList<String>();
 
-    @Option(name = "C", longName = "compress-all", usage = "Compress all files")
+    @Option(name = "-C", aliases = "--compress-all", usage = "Compress all files")
     private Boolean compressAll = null;
 
-    @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting / verifying")
+    @Option(name = "-r", aliases = "--root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting / verifying")
     private File rootOrNull;
 
-    @Option(name = "D", longName = "suppress-directories", usage = "Supress output for directories itself for LIST and VERIFY")
+    @Option(name = "-D", aliases = "--suppress-directories", usage = "Supress output for directories itself for LIST and VERIFY")
     private boolean suppressDirectoryEntries = false;
 
-    @Option(name = "R", longName = "recursive", usage = "Recursive LIST and VERIFY")
+    @Option(name = "-R", aliases = "--recursive", usage = "Recursive LIST and VERIFY")
     private boolean recursive = false;
 
-    @Option(name = "v", longName = "verbose", usage = "Verbose output (all operations)")
+    @Option(name = "-v", aliases = "--verbose", usage = "Verbose output (all operations)")
     private boolean verbose = false;
 
-    @Option(name = "q", longName = "quiet", usage = "Quiet operation (only error output)")
+    @Option(name = "-q", aliases = "--quiet", usage = "Quiet operation (only error output)")
     private boolean quiet = false;
 
-    @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid for LIST and VERIFY")
+    @Option(name = "-n", aliases = "--numeric", usage = "Use numeric values for mode, uid and gid for LIST and VERIFY")
     private boolean numeric = false;
 
-    @Option(name = "t", longName = "test-checksums", usage = "Test CRC32 checksums of files in archive for LIST")
+    @Option(name = "-t", aliases = "--test-checksums", usage = "Test CRC32 checksums of files in archive for LIST")
     private boolean testAgainstChecksums = false;
 
-    @Option(name = "a", longName = "verify-attributes", usage = "Consider file attributes for VERIFY")
+    @Option(name = "-a", aliases = "--verify-attributes", usage = "Consider file attributes for VERIFY")
     private boolean verifyAttributes = false;
 
-    @Option(name = "m", longName = "check-missing-files", usage = "Check for files present on the filesystem but missing from the archive for VERIFY")
+    @Option(name = "-m", aliases = "--check-missing-files", usage = "Check for files present on the filesystem but missing from the archive for VERIFY")
     private boolean checkMissingFile = false;
 
-    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.8 (default), N=2 -> HDF51.10), N=99 -> LATEST")
+    @Option(name = "-F", aliases = "--file-format", hidden = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.8 (default), N=2 -> HDF51.10), N=99 -> LATEST")
     private int fileFormat = 1;
 
-    @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
+    @Option(name = "-S", aliases = "--stop-on-error", hidden = true, usage = "Stop on first error and give detailed error report")
     private boolean stopOnError = false;
 
-    @Option(longName = "no-sync", skipForExample = true, usage = "Do not sync to disk before program exits (write mode only)")
+    @Option(name = "-N", aliases = "--no-sync", hidden = true, usage = "Do not sync to disk before program exits (write mode only)")
     private boolean noSync = false;
 
     private HDF5Archiver archiver;
@@ -236,7 +236,7 @@ public class HDF5ArchiverMain
         initializationOK = true;
     }
 
-    @Option(longName = "version", skipForExample = true, usage = "Prints out the version information")
+    @Option(name = "-V", aliases = "--version", hidden = true, usage = "Prints out the version information")
     void printVersion(final boolean exit)
     {
         System.err.println("HDF5 archiver version "
@@ -247,7 +247,7 @@ public class HDF5ArchiverMain
         }
     }
 
-    @Option(longName = "build", skipForExample = true, usage = "Prints out the build and environment information")
+    @Option(name = "-B", aliases = "--build", hidden = true, usage = "Prints out the build and environment information")
     void printBuildAndEnvironmentInfo(final boolean exit)
     {
         System.err.println(ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo.INSTANCE);
@@ -259,30 +259,39 @@ public class HDF5ArchiverMain
 
     private boolean helpPrinted = false;
 
-    @Option(longName = "help", skipForExample = true, usage = "Shows this help text")
+    @Option(name = "-H", aliases = "--help", hidden = true, usage = "Shows this help text")
     void printHelp(final boolean dummy)
     {
         if (helpPrinted)
         {
             return;
         }
-        parser.printHelp("h5ar", "[option [...]]",
-                "[ARCHIVE <archive_file> <item-to-archive> [...] | "
-                        + "CAT <archive_file> <item-to-cat> [...] | "
-                        + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
-                        + "DELETE <archive_file> <item-to-delete> [...] | "
-                        + "LIST <archive_file> | VERIFY <archive_file>]", ExampleMode.NONE);
-        System.err.println("ARCHIVE: add files on the file system to an archive");
-        System.err.println("CAT: extract files from an archive to stdout");
-        System.err.println("EXTRACT: extract files from an archive to the file system");
-        System.err.println("DELETE: delete files from an archive");
-        System.err.println("LIST: list files in an archive");
+        
+        System.err.println("h5ar " +
+                  "[ARCHIVE [option [...]] <archive_file> <item-to-archive> [...]\n"
+                + "     | CAT [option [...]] <archive_file> <item-to-cat> [...]\n"
+                + "     | EXTRACT [option [...]] <archive_file> [<item-to-unarchive> [...]]\n"
+                + "     | DELETE [option [...]] <archive_file> <item-to-delete> [...]\n"
+                + "     | LIST [option [...]] <archive_file> [<item-to-list> [...]]\n"
+                + "     | VERIFY [option [...]] <archive_file> [<item-to-verify> [...]]]");
+        System.err.println("\nOptions:");
+        parser.printUsage(new OutputStreamWriter(System.err), null, OptionHandlerFilter.ALL);
+        System.err.println("\nModes (command capitalization ignored):");
+        System.err.println(" ARCHIVE (AR, A): add files on the file system to an archive (always recursive)");
+        System.err.println(" CAT (C): extract file(s) from an archive to stdout");
+        System.err.println(" EXTRACT (EX, E): extract files from an archive to the file system (always recursive)");
+        System.err.println(" DELETE (REMOVE, RM, D): delete files from an archive");
+        System.err.println(" LIST (LS, S): list files in an archive");
         System.err
-                .println("VERIFY: verify the existence and integrity of files on the file system vs. the content of an archive");
-        System.err
-                .println("Command aliases: ARCHIVE: A, AR; CAT: C, CT; EXTRACT: E, EX; DELETE: D, REMOVE, RM; LIST: L, LS; VERIFY: V, VF");
-        System.err.println("Example: h5ar" + parser.printExample(ExampleMode.ALL)
-                + " ARCHIVE archive.h5ar .");
+                .println(" VERIFY (VF, V): verify the existence and integrity of files on the file system vs. the content of an archive");
+        System.err.println("\nExamples:");
+        System.err.println(" h5ar ar /tmp/home -r ~/ .");
+        System.err.println("  - will create home.h5ar in /tmp containing all files of the user's home directory (note: ARCHIVE is always recursive).");
+        System.err.println(" h5ar ls -v -R -t -S /tmp/home");
+        System.err.println("  - will list the full content of archive /tmp/home.h5ar recursively, with full detail and verify the checksums; stop if there is a checksum mismatch.");
+        System.err.println(" h5ar vf -r ~/ -v -R -m /tmp/home foo bar");
+        System.err.println("  - will verify the content of directries foo/ and bar/ in archive /tmp/home.h5ar recursively against the user's home directory, detecting any missing files.");
+        
         helpPrinted = true;
     }
 
@@ -576,40 +585,20 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
-                    if (verbose)
-                    {
-                        System.out.printf("Verifying file '%s', file system root: '%s'\n",
-                                archiveFile, getFSRoot());
-                    }
-                    final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final AtomicInteger missingFileCount = new AtomicInteger();
-                    final IArchiveEntryVisitor missingFileVisitorOrNull =
-                            checkMissingFile ? new IArchiveEntryVisitor()
-                                {
-                                    @Override
-                                    public void visit(ArchiveEntry entry)
-                                    {
-                                        final String errMsg =
-                                                "ERROR: Object '" + entry.getName()
-                                                        + "' does not exist in archive.";
-                                        if (verbose)
-                                        {
-                                            System.out.println(entry.describeLink(true, false,
-                                                    false) + "\t" + errMsg);
-                                        } else if (quiet == false)
-                                        {
-                                            System.out.println(entry.getPath() + "\t" + errMsg);
-                                        }
-                                        System.err.println(errMsg);
-                                        missingFileCount.incrementAndGet();
-                                    }
-                                } : null;
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
-                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
-                            missingFileVisitorOrNull, VerifyParameters.build().recursive(recursive)
-                                    .numeric(numeric).verifyAttributes(verifyAttributes).get());
-                    return visitor.isOK(missingFileCount.get());
+                    int missingFiles = 0;
+                    if (arguments.size() == 2)
+                    {
+                        missingFiles = doVerify("/", visitor);
+                    } else
+                    {
+                        for (int i = 2; i < arguments.size(); ++i)
+                        {
+                            missingFiles += doVerify(arguments.get(i), visitor);
+                        }
+                    }
+                    return visitor.isOK(missingFiles);
                 }
                 case LIST:
                 {
@@ -617,16 +606,19 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
-                    if (verbose)
-                    {
-                        System.out.printf("Listing file '%s'\n", archiveFile);
-                    }
-                    final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =
                             new ListingVisitor(testAgainstChecksums, quiet, verbose, numeric,
                                     suppressDirectoryEntries);
-                    archiver.list(fileOrDir, visitor, ListParameters.build().recursive(recursive)
-                            .readLinkTargets(verbose).testArchive(testAgainstChecksums).get());
+                    if (arguments.size() == 2)
+                    {
+                        doList("/", visitor);
+                    } else
+                    {
+                        for (int i = 2; i < arguments.size(); ++i)
+                        {
+                            doList(arguments.get(i), visitor);
+                        }
+                    }
                     return visitor.isOK(0);
                 }
                 case HELP: // Can't happen any more at this point
@@ -640,6 +632,51 @@ public class HDF5ArchiverMain
                 archiver.close();
             }
         }
+    }
+
+    private void doList(final String fileOrDir, final ListingVisitor visitor)
+    {
+        if (verbose)
+        {
+            System.out.printf("Listing entry '%s' of file '%s'\n", fileOrDir, archiveFile);
+        }
+        archiver.list(fileOrDir, visitor, ListParameters.build().recursive(recursive)
+                .readLinkTargets(verbose).testArchive(testAgainstChecksums).get());
+    }
+
+    private int doVerify(final String fileOrDir, final ListingVisitor visitor)
+    {
+        if (verbose)
+        {
+            System.out.printf("Verifying entry '%s' of file '%s', file system root: '%s'\n",
+                    fileOrDir, archiveFile, getFSRoot());
+        }
+        final AtomicInteger missingFileCount = new AtomicInteger();
+        final IArchiveEntryVisitor missingFileVisitorOrNull =
+                checkMissingFile ? new IArchiveEntryVisitor()
+                    {
+                        @Override
+                        public void visit(ArchiveEntry entry)
+                        {
+                            final String errMsg =
+                                    "ERROR: Object '" + entry.getName()
+                                            + "' does not exist in archive.";
+                            if (verbose)
+                            {
+                                System.out.println(entry.describeLink(true, false,
+                                        false) + "\t" + errMsg);
+                            } else if (quiet == false)
+                            {
+                                System.out.println(entry.getPath() + "\t" + errMsg);
+                            }
+                            System.err.println(errMsg);
+                            missingFileCount.incrementAndGet();
+                        }
+                    } : null;
+        archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
+                missingFileVisitorOrNull, VerifyParameters.build().recursive(recursive)
+                        .numeric(numeric).verifyAttributes(verifyAttributes).get());
+        return missingFileCount.get();
     }
 
     public static void main(String[] args)

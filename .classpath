@@ -13,9 +13,9 @@
 	<classpathentry kind="lib" path="libs/test/objenesis-1.0.jar"/>
 	<classpathentry kind="lib" path="libs/test/testng-jdk15.jar"/>
 	<classpathentry kind="lib" path="libs/build/ecj-4.6.1.jar"/>
-	<classpathentry kind="lib" path="libs/prod/cisd-args4j-9.11.2.jar" sourcepath="libs/prod/cisd-args4j-9.11.2-sources.jar"/>
 	<classpathentry kind="lib" path="libs/prod/commons-lang3-3.7.jar" sourcepath="libs/prod/commons-lang3-3.7-sources.jar"/>
 	<classpathentry kind="lib" path="libs/prod/commons-io-2.6.jar" sourcepath="libs/prod/commons-io-2.6-sources.jar"/>
 	<classpathentry kind="lib" path="libs/prod/sis-base-18.09-pre1.jar" sourcepath="libs/prod/sis-base-18.09-pre1-sources.jar"/>
+	<classpathentry kind="lib" path="libs/prod/args4j-2.33.jar"/>
 	<classpathentry kind="output" path="targets/classes"/>
 </classpath>
