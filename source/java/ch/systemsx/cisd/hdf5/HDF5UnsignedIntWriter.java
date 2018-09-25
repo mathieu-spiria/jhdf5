@@ -435,7 +435,7 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
         assert data != null;
 
         baseWriter.checkOpen();
-        baseWriter.checkDimensions(dataSet, new long[] { dataSize }, new long[] { offset });
+        baseWriter.checkRank(dataSet, new long[] { dataSize }, new long[] { offset });
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -987,7 +987,7 @@ class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWri
         assert offset != null;
 
         baseWriter.checkOpen();
-        baseWriter.checkDimensions(dataSet, MDArray.toLong(data.dimensions()), offset);
+        baseWriter.checkRank(dataSet, MDArray.toLong(data.dimensions()), offset);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override

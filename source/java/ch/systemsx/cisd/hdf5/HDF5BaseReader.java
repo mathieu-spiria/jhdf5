@@ -246,7 +246,7 @@ class HDF5BaseReader
         }
     }
 
-    void checkDimensions(HDF5DataSet dataSet, final long[] dataDimensions, final long[] offset)
+    void checkRank(HDF5DataSet dataSet, final long[] dataDimensions, final long[] offset) throws HDF5SpaceRankMismatch
     {
         assert dataSet != null;
         assert dataDimensions != null;
@@ -258,16 +258,6 @@ class HDF5BaseReader
         if (offset.length != dataDimensions.length)
         {
             throw new HDF5SpaceRankMismatch(dataSet.getDimensions().length, offset.length);
-        }
-        final long[] maxDimensions = dataSet.getMaxDimensions();
-        for (int i = 0; i < maxDimensions.length; ++i)
-        {
-            final long max = maxDimensions[i];
-            if (max >= 0 && offset[i] + dataDimensions[i] > max)
-            {
-                throw new ArrayIndexOutOfBoundsException("Dimension " + i + ": " + offset[i] 
-                        + "+" + dataDimensions[i] + " > " + max);
-            }
         }
     }
 

@@ -3320,7 +3320,7 @@ public class HDF5RoundtripTest
         }
     }
 
-    @Test(expectedExceptions = { ArrayIndexOutOfBoundsException.class })
+    @Test(expectedExceptions = { HDF5JavaException.class })
     public void testMDLongArrayArrayIndexOutOfBounds()
     {
         assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
@@ -3334,13 +3334,13 @@ public class HDF5RoundtripTest
             try (final HDF5DataSet ds = writer.int64().createMDArrayAndOpen("ds", new int[] { 2, 2, 2 }, HDF5IntStorageFeatures.INT_COMPACT)) 
             {
                 fillArray(7, dataWritten.getAsFlatArray());
-                // Will fail with an ArrayIndexOutOfBoundsException as the data are larger than the data set.
+                // Will fail with an HDF5JavaException as the block number is out of bounds.
                 writer.int64().writeMDArrayBlock(ds, dataWritten, new long[] { 0, 1, 0 });
             }
         }
     }
     
-    @Test(expectedExceptions = { ArrayIndexOutOfBoundsException.class })
+    @Test(expectedExceptions = { HDF5JavaException.class })
     public void testMDLongArrayOnReadArrayIndexOutOfBounds()
     {
         assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
@@ -3363,6 +3363,7 @@ public class HDF5RoundtripTest
             try (final HDF5DataSet ds = reader.object().openDataSet("ds")) 
             {
                 fillArray(7, dataWritten.getAsFlatArray());
+                // Will fail with an HDF5JavaException as the block number is out of bounds.
                 reader.int64().readMDArrayBlock(ds, dimensions, new long[] { 0, 1, 0 });
             }
             
