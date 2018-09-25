@@ -246,7 +246,7 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
     }
 
     @Override
-    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize)
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize)
     {
         return createArrayAndOpen(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }

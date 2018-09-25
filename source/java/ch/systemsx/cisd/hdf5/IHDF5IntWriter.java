@@ -180,7 +180,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @return The created data set.
      */
-    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize);
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize);
 
     /**
      * Creates a <code>int</code> array (of rank 1).
@@ -203,17 +203,6 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             HDF5IntStorageFeatures features);
     
     /**
-     * Creates a <code>int</code> array (of rank 1). When creating many data sets with the same
-     * features, this method will be faster than
-     * {@link #createArray(String, HDF5FloatStorageFeatures)}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param template The template to be used to determine the features of the data set.
-     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
-     */
-    public void createArray(String objectPath, HDF5DataSetTemplate template);
-
-    /**
      * Creates a <code>int</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -235,22 +224,6 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             HDF5IntStorageFeatures features);
     
     /**
-     * Creates a <code>int</code> array (of rank 1) and opens it for reading and writing.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
-     * @param features The storage features of the data set.
-     * @return The created data set.
-     */
-    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize,
-            HDF5IntStorageFeatures features);
-    
-    /**
      * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -267,6 +240,35 @@ public interface IHDF5IntWriter extends IHDF5IntReader
 
     /**
      * Creates a <code>int</code> array (of rank 1) and opens it for reading and writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the int array to create. When using extendable data sets 
+     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
+     *          set smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
+     *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
+     * @return The created data set.
+     */
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features);
+    
+    /**
+     * Creates a <code>int</code> array (of rank 1). When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void createArray(String objectPath, HDF5DataSetTemplate template);
+
+    /**
+     * Creates a <code>int</code> array (of rank 1) and opens it for reading and writing.
+     * When creating many data sets with the same features, this method will be faster than
+     * {@link #createArrayAndOpen(String, long, int, HDF5IntStorageFeatures)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param template The template to be used to determine the features of the data set.
@@ -634,17 +636,6 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             int[] blockDimensions);
     
     /**
-     * Creates a multi-dimensional <code>int</code> array. When creating many data sets with the same
-     * features, this method will be faster than
-     * {@link #createMDArray(String, HDF5IntStorageFeatures)}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param template The template to be used to determine the features of the data set.
-     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
-     */
-    public void createMDArray(String objectPath, HDF5DataSetTemplate template);
-
-    /**
      * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -668,7 +659,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * Creates a multi-dimensional <code>int</code> array and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the <code>float</code> array to create. When <i>requesting</i> 
+     * @param dimensions The dimensions of the <code>int</code> array to create. When <i>requesting</i> 
      *            a chunked data set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), 
      *            the initial size of the array will be 0 and the chunk size will be <var>dimensions</var>. 
      *            When <i>allowing</i> a chunked data set (e.g. 
@@ -709,9 +700,20 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             int[] blockDimensions, HDF5IntStorageFeatures features);
     
     /**
+     * Creates a multi-dimensional <code>int</code> array. When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #createMDArray(String, long[], int[], HDF5IntStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void createMDArray(String objectPath, HDF5DataSetTemplate template);
+
+    /**
      * Creates a multi-dimensional <code>int</code> array and opens it for reading and writing. 
      * When creating many data sets with the same features, this method will be faster than
-     * {@link #createMDArray(String, HDF5IntStorageFeatures)}.
+     * {@link #createMDArrayAndOpen(String, long[], int[], HDF5IntStorageFeatures)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param template The template to be used to determine the features of the data set.
@@ -758,7 +760,6 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            same length.
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
-     * @return The created data set.
      */
     public void writeMDArrayBlock(HDF5DataSet dataset, MDIntArray data,
             long[] blockNumber);

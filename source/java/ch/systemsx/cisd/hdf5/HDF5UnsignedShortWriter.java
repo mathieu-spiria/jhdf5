@@ -245,7 +245,7 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
     }
 
     @Override
-    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize)
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize)
     {
         return createArrayAndOpen(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }

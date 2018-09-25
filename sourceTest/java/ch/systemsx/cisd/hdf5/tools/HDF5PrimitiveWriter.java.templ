@@ -245,7 +245,7 @@ class HDF5__Name__Writer extends HDF5__Name__Reader implements IHDF5__Name__Writ
     }
 
     @Override
-    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize)
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize)
     {
         return createArrayAndOpen(objectPath, size, blockSize, __CLASSNAME___NO_COMPRESSION);
     }
