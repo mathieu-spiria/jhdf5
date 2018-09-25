@@ -266,7 +266,7 @@ class HDF5IntReader implements IHDF5IntReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final long dataSetId = dataSet.getDatasetId();
+                    final long dataSetId = dataSet.getDataSetId();
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSet, memoryOffset, 
                                         array.dimensions());
@@ -323,7 +323,7 @@ class HDF5IntReader implements IHDF5IntReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final long dataSetId = dataSet.getDatasetId();
+                    final long dataSetId = dataSet.getDataSetId();
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSet, memoryOffset, array
                                     .dimensions(), offset, blockDimensions);
@@ -391,7 +391,7 @@ class HDF5IntReader implements IHDF5IntReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSet, offset, blockSize);
                     final int[] data = new int[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSet.getDatasetId(), H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSet.getDataSetId(), H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
@@ -473,7 +473,7 @@ class HDF5IntReader implements IHDF5IntReader
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
         final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
-        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, cardBoundIndices);
+        checkBoundIndices(dataSet.getDataSetPath(), fullDimensions, cardBoundIndices);
         final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
         Arrays.fill(effectiveBlockDimensions, -1);
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
@@ -519,7 +519,7 @@ class HDF5IntReader implements IHDF5IntReader
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
         final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
-        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, boundIndices);
+        checkBoundIndices(dataSet.getDataSetPath(), fullDimensions, boundIndices);
         final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
         Arrays.fill(effectiveBlockDimensions, -1);
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
@@ -689,7 +689,7 @@ class HDF5IntReader implements IHDF5IntReader
         final long[] fullDimensions = dataSet.getDimensions();
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, blockDimensions,
+        checkBoundIndices(dataSet.getDataSetPath(), fullDimensions, blockDimensions,
                 cardinalityBoundIndices(boundIndices));
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
@@ -723,7 +723,7 @@ class HDF5IntReader implements IHDF5IntReader
         final long[] fullDimensions = dataSet.getDimensions();
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, blockDimensions,
+        checkBoundIndices(dataSet.getDataSetPath(), fullDimensions, blockDimensions,
                 cardinalityBoundIndices(boundIndices));
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
@@ -758,7 +758,7 @@ class HDF5IntReader implements IHDF5IntReader
                 @Override
                 public MDIntArray call(ICleanUpRegistry registry)
                 {
-                    final long dataSetId = dataSet.getDatasetId();
+                    final long dataSetId = dataSet.getDataSetId();
                     try
                     {
                         final DataSpaceParameters spaceParams =
@@ -772,7 +772,7 @@ class HDF5IntReader implements IHDF5IntReader
                     } catch (HDF5SpaceRankMismatch ex)
                     {
                         final HDF5DataSetInformation info =
-                                baseReader.getDataSetInformation(dataSet.getDatasetPath(),
+                                baseReader.getDataSetInformation(dataSet.getDataSetPath(),
                                         DataTypeInfoOptions.MINIMAL, false);
                         if (ex.getSpaceRankExpected() - ex.getSpaceRankFound() == info
                                 .getTypeInformation().getRank())

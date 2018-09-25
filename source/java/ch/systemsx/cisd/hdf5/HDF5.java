@@ -1019,7 +1019,7 @@ class HDF5
     public boolean extendDataSet(HDF5DataSet dataSet,long[] newDimensions, 
             boolean overwriteMode) throws HDF5JavaException
     {
-        final long dataSetId = dataSet.getDatasetId();
+        final long dataSetId = dataSet.getDataSetId();
         final long[] oldDimensions = dataSet.getDimensions();
         if (Arrays.equals(oldDimensions, newDimensions) == false)
         {

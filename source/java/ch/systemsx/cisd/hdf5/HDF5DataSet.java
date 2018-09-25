@@ -60,17 +60,17 @@ public class HDF5DataSet implements AutoCloseable
     
     private final HDF5 h5;
     
-    private final String datasetPath;
+    private final String dataSetPath;
 
     private final HDF5StorageLayout layout;
 
-    private long dataspaceId;
+    private long dataSpaceId;
     
     private long[] maxDimensions;
 
     private long[] dimensions;
 
-    private long datasetId;
+    private long dataSetId;
     
     private long[] memoryBlockDimensions;
     
@@ -85,14 +85,14 @@ public class HDF5DataSet implements AutoCloseable
     {
         this.baseReader = baseReader;
         this.h5 = baseReader.h5;
-        this.datasetPath = datasetPath;
-        this.datasetId = datasetId;
+        this.dataSetPath = datasetPath;
+        this.dataSetId = datasetId;
         if (ownDataSpaceId)
         {
-            this.dataspaceId = dataspaceId;
+            this.dataSpaceId = dataspaceId;
         } else
         {
-            this.dataspaceId = H5Scopy(dataspaceId);
+            this.dataSpaceId = H5Scopy(dataspaceId);
         }
         this.maxDimensions = maxDimensionsOrNull;
         this.dimensions = dimensions;
@@ -106,20 +106,20 @@ public class HDF5DataSet implements AutoCloseable
     /**
      * Returns the path of this data set.
      */
-    public String getDatasetPath()
+    public String getDataSetPath()
     {
-        return datasetPath;
+        return dataSetPath;
     }
 
-    long getDatasetId()
+    long getDataSetId()
     {
-        return datasetId;
+        return dataSetId;
     }
 
-    long getDataspaceId()
+    long getDataSpaceId()
     {
-        H5.H5Sselect_all(dataspaceId);
-        return dataspaceId;
+        H5.H5Sselect_all(dataSpaceId);
+        return dataSpaceId;
     }
     
     long getMemorySpaceId(long[] memoryBlockDimensions)
@@ -148,7 +148,7 @@ public class HDF5DataSet implements AutoCloseable
     {
         if (maxDimensions == null)
         {
-            this.maxDimensions = h5.getDataSpaceMaxDimensions(dataspaceId);
+            this.maxDimensions = h5.getDataSpaceMaxDimensions(dataSpaceId);
         }
         return maxDimensions;
     }
@@ -162,7 +162,7 @@ public class HDF5DataSet implements AutoCloseable
     {
         if (fullRank == -1)
         {
-            this.fullRank = baseReader.getRank(datasetPath);
+            this.fullRank = baseReader.getRank(dataSetPath);
         }
         return fullRank;
     }
@@ -175,7 +175,7 @@ public class HDF5DataSet implements AutoCloseable
             closeDataSpaceId();
             h5.extendDataSet(this, newDimensions, false);
             this.dimensions = newDimensions;
-            this.dataspaceId = h5.getDataSpaceForDataSet(datasetId, null);
+            this.dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, null);
         }
     }
 
@@ -183,7 +183,7 @@ public class HDF5DataSet implements AutoCloseable
     {
         if (dataTypeId == -1)
         {
-            this.dataTypeId = H5Dget_type(datasetId);
+            this.dataTypeId = H5Dget_type(dataSetId);
         }
         return dataTypeId;
     }
@@ -208,19 +208,19 @@ public class HDF5DataSet implements AutoCloseable
 
     private void closeDataSetId()
     {
-        if (datasetId > 0)
+        if (dataSetId > 0)
         {
-            H5Dclose(datasetId);
-            datasetId = -1;
+            H5Dclose(dataSetId);
+            dataSetId = -1;
         }
     }
 
     private void closeDataSpaceId()
     {
-        if (dataspaceId > -1)
+        if (dataSpaceId > -1)
         {
-            H5Sclose(dataspaceId);
-            dataspaceId = -1;
+            H5Sclose(dataSpaceId);
+            dataSpaceId = -1;
         }
     }
     
@@ -239,8 +239,8 @@ public class HDF5DataSet implements AutoCloseable
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((datasetPath == null) ? 0 : datasetPath.hashCode());
-        result = prime * result + (int) datasetId;
+        result = prime * result + ((dataSetPath == null) ? 0 : dataSetPath.hashCode());
+        result = prime * result + (int) dataSetId;
         return result;
     }
 
@@ -260,17 +260,17 @@ public class HDF5DataSet implements AutoCloseable
             return false;
         }
         HDF5DataSet other = (HDF5DataSet) obj;
-        if (datasetPath == null)
+        if (dataSetPath == null)
         {
-            if (other.datasetPath != null)
+            if (other.dataSetPath != null)
             {
                 return false;
             }
-        } else if (!datasetPath.equals(other.datasetPath))
+        } else if (!dataSetPath.equals(other.dataSetPath))
         {
             return false;
         }
-        if (datasetId != other.datasetId)
+        if (dataSetId != other.dataSetId)
         {
             return false;
         }

@@ -447,18 +447,18 @@ class HDF5__Name__Writer extends HDF5__Name__Reader implements IHDF5__Name__Writ
                         { offset };
                     final long[] requiredDimensions = new long[]
                         { offset + dataSize };
-                    if (baseWriter.h5.extendDataSet(dataSet.getDatasetId(),
+                    if (baseWriter.h5.extendDataSet(dataSet.getDataSetId(),
                             dataSet.getLayout(), dataSet.getDimensions(), requiredDimensions,
                             dataSet.getMaxDimensions(), false, registry))
                     {
                         dataSet.setDimensions(requiredDimensions);
                     }
                     final long dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSet.getDatasetId(), registry);
+                            baseWriter.h5.getDataSpaceForDataSet(dataSet.getDataSetId(), registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
                     final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSet.getDatasetId(), __Memorytype__, memorySpaceId, dataSpaceId,
+                    H5Dwrite(dataSet.getDataSetId(), __Memorytype__, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -1001,10 +1001,10 @@ class HDF5__Name__Writer extends HDF5__Name__Reader implements IHDF5__Name__Writ
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
                     dataSet.extend(dataSetDimensions);
-                    final long dataSpaceId = dataSet.getDataspaceId(); 
+                    final long dataSpaceId = dataSet.getDataSpaceId(); 
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
                     final long memorySpaceId = dataSet.getMemorySpaceId(dimensions); 
-                    H5Dwrite(dataSet.getDatasetId(), __Memorytype__, memorySpaceId, dataSpaceId, 
+                    H5Dwrite(dataSet.getDataSetId(), __Memorytype__, memorySpaceId, dataSpaceId, 
                             H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
@@ -1148,8 +1148,8 @@ class HDF5__Name__Writer extends HDF5__Name__Reader implements IHDF5__Name__Writ
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final long dataSetId = dataSet.getDatasetId();
-                    final long dataSpaceId = dataSet.getDataspaceId(); 
+                    final long dataSetId = dataSet.getDataSetId();
+                    final long dataSpaceId = dataSet.getDataSpaceId(); 
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final long memorySpaceId = dataSet.getMemorySpaceId(memoryDimensions);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),

@@ -588,7 +588,7 @@ class HDF5BaseReader
         final long[] dimensions;
         if (blockSize > 0)
         {
-            dataSpaceId = dataSet.getDataspaceId();
+            dataSpaceId = dataSet.getDataSpaceId();
             dimensions = dataSet.getDimensions();
             if (dimensions.length != 1)
             {
@@ -760,7 +760,7 @@ class HDF5BaseReader
             assert offset != null;
             assert blockDimensionsOrNull.length == offset.length;
 
-            dataSpaceId = dataSet.getDataspaceId();
+            dataSpaceId = dataSet.getDataSpaceId();
             final long[] dimensions = dataSet.getDimensions();
             if (dimensions.length != blockDimensionsOrNull.length)
             {
@@ -977,7 +977,7 @@ class HDF5BaseReader
         final long dataSpaceId;
         final long[] effectiveBlockDimensions;
 
-        dataSpaceId = dataSet.getDataspaceId();
+        dataSpaceId = dataSet.getDataSpaceId();
         final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
         if (dimensions.length != blockDimensions.length)
         {
