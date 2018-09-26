@@ -61,6 +61,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -109,8 +110,8 @@ public class HDF5RoundtripTest
         rootDirectory.deleteOnExit();
     }
 
-    @Override
-    protected void finalize() throws Throwable
+    @AfterSuite
+    protected void finalizeTest() throws Throwable
     {
         // Delete the working directory
         if (workingDirectory.exists() && workingDirectory.canWrite())
@@ -123,7 +124,6 @@ public class HDF5RoundtripTest
             rootDirectory.delete();
         }
 
-        super.finalize();
     }
 
     public static void main(String[] args) throws Throwable
@@ -175,6 +175,7 @@ public class HDF5RoundtripTest
         test.testFloatArrayBlockWithPreopenedDataSet();
         test.testFloatArraysFromTemplates();
         test.testMDShortArrayRankMismatch();
+        test.testMDShortArrayRankMismatchDetached();
         test.testMDLongArrayArrayIndexOutOfBounds();
         test.testMDLongArrayOnReadArrayIndexOutOfBounds();
         test.testFloatMDArraysDetachedDataSets();
@@ -480,7 +481,7 @@ public class HDF5RoundtripTest
         test.testMDCImageGeneration();
         test.testMDCImageGenerationBug();
 
-        test.finalize();
+        test.finalizeTest();
     }
 
     @Test
@@ -3302,6 +3303,24 @@ public class HDF5RoundtripTest
 
     @Test(expectedExceptions = { HDF5SpaceRankMismatch.class })
     public void testMDShortArrayRankMismatch()
+    {
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
+        final File shortArrayFile = new File(workingDirectory, "MDShortArrayRankMismatch.h5");
+        shortArrayFile.delete();
+        assertFalse(shortArrayFile.exists());
+        shortArrayFile.deleteOnExit();
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(shortArrayFile))
+        {
+            final MDShortArray dataWritten = new MDShortArray(new int[] { 2, 2, 2 });
+            writer.uint16().createMDArray("ds", new int[] { 4, 2 });
+            fillArray((short) 7, dataWritten.getAsFlatArray());
+            // Will fail with an HDF5SpaceRankMismatch as the data set is of rank 3, but the data are of rank 2.
+            writer.uint16().writeMDArrayBlock("ds", dataWritten, dataWritten.longDimensions());
+        }
+    }
+
+    @Test(expectedExceptions = { HDF5SpaceRankMismatch.class })
+    public void testMDShortArrayRankMismatchDetached()
     {
         assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final File shortArrayFile = new File(workingDirectory, "MDShortArrayRankMismatch.h5");

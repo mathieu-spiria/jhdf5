@@ -436,7 +436,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
         assert data != null;
 
         baseWriter.checkOpen();
-        baseWriter.checkRank(dataSet, new long[] { dataSize }, new long[] { offset });
+        baseWriter.h5.checkRank(1, dataSet.getRank());
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -448,9 +448,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                         { offset };
                     final long[] requiredDimensions = new long[]
                         { offset + dataSize };
-                    if (baseWriter.h5.extendDataSet(dataSet.getDataSetId(),
-                            dataSet.getLayout(), dataSet.getDimensions(), requiredDimensions,
-                            dataSet.getMaxDimensions(), false, registry))
+                    if (baseWriter.h5.extendDataSet(dataSet, requiredDimensions, false, registry))
                     {
                         dataSet.setDimensions(requiredDimensions);
                     }
@@ -900,8 +898,8 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
     }
     
     @Override
-    public void writeSlicedMDArrayBlock(String objectPath, MDLongArray data, long[] blockNumber,
-            long[] boundIndices)
+    public void writeSlicedMDArrayBlock(String objectPath, MDLongArray data,
+    		long[] blockNumber, long[] boundIndices)
     {
         assert blockNumber != null;
 
@@ -915,8 +913,8 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
     }
 
     @Override
-    public void writeSlicedMDArrayBlock(HDF5DataSet dataSet, MDLongArray data, long[] blockNumber,
-            long[] boundIndices)
+    public void writeSlicedMDArrayBlock(HDF5DataSet dataSet, MDLongArray data, 
+            long[] blockNumber, long[] boundIndices)
     {
         assert blockNumber != null;
 
@@ -988,7 +986,8 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
         assert offset != null;
 
         baseWriter.checkOpen();
-        baseWriter.checkRank(dataSet, MDArray.toLong(data.dimensions()), offset);
+        baseWriter.h5.checkRank(data.rank(), offset.length);
+        baseWriter.h5.checkRank(data.rank(), dataSet.getRank());
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override

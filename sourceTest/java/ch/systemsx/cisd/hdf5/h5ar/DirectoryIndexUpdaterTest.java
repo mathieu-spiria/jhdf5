@@ -26,6 +26,7 @@ import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -77,13 +78,13 @@ public class DirectoryIndexUpdaterTest
         this.updater = new DirectoryIndexUpdater(provider);
     }
 
-    @Override
-    protected void finalize() throws Throwable
+    @AfterSuite
+    protected void finalizeTest() throws Throwable
     {
         // Delete the working directory
         if (workingDirectory.exists() && workingDirectory.canWrite())
         {
-            workingDirectory.delete();
+            FileUtils.deleteDirectory(workingDirectory);
         }
         // Delete root directory
         if (rootDirectory.exists() && rootDirectory.canWrite())

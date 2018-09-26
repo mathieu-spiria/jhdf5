@@ -382,7 +382,7 @@ class HDF5IntReader implements IHDF5IntReader
         assert dataSet != null;
 
         baseReader.checkOpen();
-        baseReader.checkRank(dataSet, new long[] { blockSize }, new long[] { offset });
+        baseReader.h5.checkRank(1, dataSet.getRank());
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
                 @Override
@@ -752,7 +752,8 @@ class HDF5IntReader implements IHDF5IntReader
         assert offset != null;
 
         baseReader.checkOpen();
-        baseReader.checkRank(dataSet, MDArray.toLong(blockDimensions), offset);
+        baseReader.h5.checkRank(blockDimensions.length, offset.length);
+        baseReader.h5.checkRank(blockDimensions.length, dataSet.getRank());
         final ICallableWithCleanUp<MDIntArray> readCallable = new ICallableWithCleanUp<MDIntArray>()
             {
                 @Override

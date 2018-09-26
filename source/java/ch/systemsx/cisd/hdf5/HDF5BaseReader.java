@@ -246,21 +246,6 @@ class HDF5BaseReader
         }
     }
 
-    void checkRank(HDF5DataSet dataSet, final long[] dataDimensions, final long[] offset) throws HDF5SpaceRankMismatch
-    {
-        assert dataSet != null;
-        assert dataDimensions != null;
-
-        if (dataSet.getDimensions().length != dataDimensions.length)
-        {
-            throw new HDF5SpaceRankMismatch(dataSet.getDimensions().length, dataDimensions.length);
-        }
-        if (offset.length != dataDimensions.length)
-        {
-            throw new HDF5SpaceRankMismatch(dataSet.getDimensions().length, offset.length);
-        }
-    }
-
     /**
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed.
@@ -703,7 +688,11 @@ class HDF5BaseReader
 
             dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
-            if (dimensions.length != blockDimensionsOrNull.length)
+            if (blockDimensionsOrNull.length != offset.length)
+            {
+                throw new HDF5SpaceRankMismatch(blockDimensionsOrNull.length, offset.length);
+            }
+            if (blockDimensionsOrNull.length != dimensions.length)
             {
                 throw new HDF5SpaceRankMismatch(blockDimensionsOrNull.length, dimensions.length);
             }

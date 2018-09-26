@@ -158,6 +158,11 @@ public class HDF5DataSet implements AutoCloseable
         return layout;
     }
     
+    int getRank()
+    {
+        return dimensions.length;
+    }
+
     int getFullRank()
     {
         if (fullRank == -1)

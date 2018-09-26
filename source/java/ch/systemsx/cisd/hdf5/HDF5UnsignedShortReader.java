@@ -382,7 +382,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         assert dataSet != null;
 
         baseReader.checkOpen();
-        baseReader.checkRank(dataSet, new long[] { blockSize }, new long[] { offset });
+        baseReader.h5.checkRank(1, dataSet.getRank());
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
                 @Override
@@ -497,8 +497,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         final long[] fullOffset = new long[fullDimensions.length];
         final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
         checkBoundIndices(objectPath, fullDimensions, boundIndices);
-        final int[] effectiveBlockDimensions =
-                new int[fullBlockDimensions.length - cardBoundIndices];
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
         Arrays.fill(effectiveBlockDimensions, -1);
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
@@ -753,7 +752,8 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         assert offset != null;
 
         baseReader.checkOpen();
-        baseReader.checkRank(dataSet, MDArray.toLong(blockDimensions), offset);
+        baseReader.h5.checkRank(blockDimensions.length, offset.length);
+        baseReader.h5.checkRank(blockDimensions.length, dataSet.getRank());
         final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
             {
                 @Override
@@ -852,7 +852,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
                 if (effectiveBlockDimensions == blockDimensions)
                 {
                     effectiveBlockDimensions = blockDimensions.clone();
-            }
+                }
                 effectiveBlockDimensions[j] = arrayDimensions[i];
             }
             if (effectiveBlockDimensions[j] != arrayDimensions[i])
@@ -890,7 +890,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
                 {
                     return new Iterator<HDF5DataBlock<short[]>>()
                         {
-                            final HDF5DataSet dataset = baseReader.openDataSet(dataSetPath);
+                            final HDF5DataSet dataSet = baseReader.openDataSet(dataSetPath);
                         
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
@@ -906,7 +906,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final short[] block =
-                                        readArrayBlockWithOffset(dataset, index
+                                        readArrayBlockWithOffset(dataSet, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<short[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -1038,4 +1038,3 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         }
     }
 }
-
