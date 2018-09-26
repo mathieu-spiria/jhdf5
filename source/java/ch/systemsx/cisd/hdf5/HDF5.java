@@ -971,8 +971,9 @@ class HDF5
             });
         final long dataSpaceId = getDataSpaceForDataSet(dataSetId, registry);
         final int rank = getDataSpaceRank(dataSpaceId);
-        final long[] dataDimensions = getDataSpaceDimensions(dataSpaceId, rank);
-        final long[] maxDimensions = getDataSpaceMaxDimensions(dataSpaceId, rank);
+        final long[][] dimsMaxDims = getDataSpaceDimensionsAndMaxDimensions(dataSpaceId, rank);
+        final long[] dataDimensions = dimsMaxDims[0];
+        final long[] maxDimensions = dimsMaxDims[1];
         final HDF5StorageLayout layout = getLayout(dataSetId, registry);
         extendDataSet(dataSetId, dataSpaceId, rank, layout, dataDimensions, newDimensions, maxDimensions,
                 overwriteMode, registry);
@@ -1956,7 +1957,7 @@ class HDF5
 
     public long getDataSpaceForDataSet(long dataSetId, ICleanUpRegistry registry)
     {
-        final long dataTypeId = H5Dget_space(dataSetId);
+        final long dataSpaceId = H5Dget_space(dataSetId);
         if (registry != null)
         {
             registry.registerCleanUp(new Runnable()
@@ -1964,11 +1965,11 @@ class HDF5
                     @Override
                     public void run()
                     {
-                        H5Sclose(dataTypeId);
+                        H5Sclose(dataSpaceId);
                     }
                 });
         }
-        return dataTypeId;
+        return dataSpaceId;
     }
 
     public long[] getDataDimensionsForAttribute(final long attributeId, ICleanUpRegistry registry)
@@ -2007,35 +2008,6 @@ class HDF5
         return dimensions;
     }
 
-    public long[] getDataMaxDimensions(final long dataSetId)
-    {
-        ICallableWithCleanUp<long[]> dataDimensionRunnable = new ICallableWithCleanUp<long[]>()
-            {
-                @Override
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    return getDataMaxDimensions(dataSetId, registry);
-                }
-
-            };
-        return runner.call(dataDimensionRunnable);
-    }
-
-    long[] getDataMaxDimensions(final long dataSetId, ICleanUpRegistry registry)
-    {
-        final long dataSpaceId = H5Dget_space(dataSetId);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    H5Sclose(dataSpaceId);
-                }
-            });
-        final long[] dimensions = getDataSpaceMaxDimensions(dataSpaceId);
-        return dimensions;
-    }
-
     public int getDataSpaceRank(long dataSpaceId)
     {
         return H5Sget_simple_extent_ndims(dataSpaceId);
@@ -2071,6 +2043,13 @@ class HDF5
         final long[] maxDimensions = new long[rank];
         H5Sget_simple_extent_dims(dataSpaceId, null, maxDimensions);
         return maxDimensions;
+    }
+
+    public long[][] getDataSpaceDimensionsAndMaxDimensions(long dataSpaceId, int rank)
+    {
+        final long[][] dimsMaxDims = new long[2][rank];
+        H5Sget_simple_extent_dims(dataSpaceId, dimsMaxDims[0], dimsMaxDims[1]);
+        return dimsMaxDims;
     }
 
     /**

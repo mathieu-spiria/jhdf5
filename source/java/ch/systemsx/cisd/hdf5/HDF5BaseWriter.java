@@ -26,7 +26,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static hdf.hdf5lib.H5.H5Dwrite;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
-import static hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
@@ -1199,28 +1198,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
             size *= d;
         }
         return size;
-    }
-
-    /**
-     * Checks whether the given <var>dimensions</var> are in bounds for <var>dataSetId</var>.
-     */
-    boolean areDimensionsInBounds(final long dataSetId, final long[] dimensions)
-    {
-        final long[] maxDimensions = h5.getDataMaxDimensions(dataSetId);
-
-        if (dimensions.length != maxDimensions.length) // Actually an error condition
-        {
-            return false;
-        }
-
-        for (int i = 0; i < dimensions.length; ++i)
-        {
-            if (maxDimensions[i] != H5S_UNLIMITED && dimensions[i] > maxDimensions[i])
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

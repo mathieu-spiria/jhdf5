@@ -80,19 +80,19 @@ public class HDF5DataSet implements AutoCloseable
     
     private int fullRank;
 
-    HDF5DataSet(HDF5BaseReader baseReader, String datasetPath, long datasetId, long dataspaceId, long[] dimensions,
+    HDF5DataSet(HDF5BaseReader baseReader, String datasetPath, long dataSetId, long dataSpaceId, long[] dimensions,
             long[] maxDimensionsOrNull, HDF5StorageLayout layout, boolean ownDataSpaceId)
     {
         this.baseReader = baseReader;
         this.h5 = baseReader.h5;
         this.dataSetPath = datasetPath;
-        this.dataSetId = datasetId;
+        this.dataSetId = dataSetId;
         if (ownDataSpaceId)
         {
-            this.dataSpaceId = dataspaceId;
+            this.dataSpaceId = dataSpaceId;
         } else
         {
-            this.dataSpaceId = H5Scopy(dataspaceId);
+            this.dataSpaceId = H5Scopy(dataSpaceId);
         }
         this.maxDimensions = maxDimensionsOrNull;
         this.dimensions = dimensions;
@@ -148,7 +148,7 @@ public class HDF5DataSet implements AutoCloseable
     {
         if (maxDimensions == null)
         {
-            this.maxDimensions = h5.getDataSpaceMaxDimensions(dataSpaceId);
+            this.maxDimensions = h5.getDataSpaceMaxDimensions(dataSpaceId, dimensions.length);
         }
         return maxDimensions;
     }
