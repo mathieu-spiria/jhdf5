@@ -645,6 +645,7 @@ public class HDF5RoundtripTest
     public void testUnsignedInt8ValuesArray()
     {
         final String byteDatasetName = "/byte";
+        final String uintAttrName = "uattr";
         final File datasetFile = new File(workingDirectory, "unsignedInt8Values.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
@@ -653,16 +654,23 @@ public class HDF5RoundtripTest
         final byte[] valuesWritten = new byte[]
             { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, (byte) 128, (byte) 255 };
         writer.uint8().writeArray(byteDatasetName, valuesWritten);
-        writer.uint8().setAttr(byteDatasetName, "attr", (byte) 224);
+        writer.uint8().setAttr(byteDatasetName, uintAttrName, (byte) 224);
         final byte[] valuesRead1 = writer.uint8().readArray(byteDatasetName);
         assertTrue(Arrays.equals(valuesWritten, valuesRead1));
-        assertEquals(224, UnsignedIntUtils.toUint8(writer.uint8().getAttr(byteDatasetName, "attr")));
+        assertEquals(224, UnsignedIntUtils.toUint8(writer.uint8().getAttr(byteDatasetName, uintAttrName)));
         writer.close();
+        
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertFalse(reader.getDataSetInformation(byteDatasetName).isSigned());
         final byte[] valuesRead2 = reader.uint8().readArray(byteDatasetName);
         assertTrue(Arrays.equals(valuesWritten, valuesRead2));
-        assertEquals(224, UnsignedIntUtils.toUint8(reader.uint8().getAttr(byteDatasetName, "attr")));
+        assertEquals(224, UnsignedIntUtils.toUint8(reader.uint8().getAttr(byteDatasetName, uintAttrName)));
+        // Alternative is to use larger intege number when reading.
+        assertEquals(224, reader.uint16().getAttr(byteDatasetName, uintAttrName));
+        assertEquals(224, reader.int16().getAttr(byteDatasetName, uintAttrName));
+        // The regular int8() reader doesn't read this number correctly. 
+        assertEquals(127, UnsignedIntUtils.toUint8(reader.int8().getAttr(byteDatasetName, uintAttrName)));
+        assertEquals(127, reader.int8().getAttr(byteDatasetName, uintAttrName));
         reader.close();
     }
 
