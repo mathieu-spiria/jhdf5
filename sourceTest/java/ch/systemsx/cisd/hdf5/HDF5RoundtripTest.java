@@ -477,6 +477,7 @@ public class HDF5RoundtripTest
         test.testObjectReferenceMDArrayAttribute();
         test.testObjectReferenceMDArray();
         test.testObjectReferenceMDArrayBlockWise();
+        test.testObjectReferenceToMDFloatArray();
         test.testHDFJavaLowLevel();
         test.testMDCImageGeneration();
         test.testMDCImageGenerationBug();
@@ -11744,6 +11745,41 @@ public class HDF5RoundtripTest
             assertEquals("" + idx, new MDArray<String>(chunk[idx++], new int[]
                 { 1, 4 }), block.getData());
         }
+        reader.close();
+    }
+
+    @Test
+    public void testObjectReferenceToMDFloatArray()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceToMDFloatArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final String floatDatasetName = "/floatMatrix";
+        final String referenceDatasetName = "/refToFloatMatrix";
+        final MDFloatArray arrayWritten = new MDFloatArray(new int[]
+            { 3, 2, 4 });
+        int count = 0;
+        for (int i = 0; i < arrayWritten.size(0); ++i)
+        {
+            for (int j = 0; j < arrayWritten.size(1); ++j)
+            {
+                for (int k = 0; k < arrayWritten.size(2); ++k)
+                {
+                    arrayWritten.set(++count, new int[]
+                        { i, j, k });
+                }
+            }
+        }
+        writer.float32().createMDArray(floatDatasetName, arrayWritten.dimensions());
+        writer.reference().write(referenceDatasetName, floatDatasetName);
+        writer.float32().writeMDArray(writer.reference().read(referenceDatasetName, false), arrayWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final MDFloatArray arrayRead = reader.float32().readMDArray(floatDatasetName);
+        assertEquals(arrayWritten, arrayRead);
         reader.close();
     }
 

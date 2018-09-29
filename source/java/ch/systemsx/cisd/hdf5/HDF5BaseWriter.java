@@ -1212,12 +1212,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         final long dataSetId;
         boolean exists = h5.exists(fileId, objectPath);
-        if (exists && keepDataIfExists(features) == false)
+        final boolean isRef = h5.isReference(objectPath);
+        if (exists && isRef == false && keepDataIfExists(features) == false)
         {
             h5.deleteObject(fileId, objectPath);
             exists = false;
         }
-        if (exists)
+        if (exists || isRef)
         {
             dataSetId =
                     h5.openAndExtendDataSet(fileId, objectPath, fileFormat, dimensions,
