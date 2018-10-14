@@ -42,7 +42,9 @@ public class HDF5ArrayBlockParamsBuilder
     }
 
     /**
-     * Creates a parameter that reads an array slice.
+     * Creates a parameter that reads an array slice. The slice is defined by "bound indices", each of
+     * which is fixed to a given value. The data block read or written only contains the free
+     * (i.e. non-fixed) indices.
      * 
      * @param boundIndices The array containing the values of the bound indices at the respective
      *            index positions, and -1 at the free index positions. For example an array of
@@ -57,7 +59,9 @@ public class HDF5ArrayBlockParamsBuilder
     }
 
     /**
-     * Creates a parameter that reads an array slice.
+     * Creates a parameter that reads an array slice. The slice is defined by "bound indices", each of
+     * which is fixed to a given value. The data block read or written only contains the free
+     * (i.e. non-fixed) indices.
      * 
      * @param boundIndices The mapping of indices to index values which should be bound. For example
      *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
