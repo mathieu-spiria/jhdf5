@@ -1025,8 +1025,10 @@ public class HDF5RoundtripTest
                         { i, j, k };
                     writer.float32().writeMDArrayBlock(floatDatasetName, arrayBlockWritten,
                             blockIndex);
-                    writer.float32().writeMDArrayBlock(floatDatasetName2, arrayBlockWritten,
-                            blockIndex);
+                    try (HDF5DataSet ds = writer.object().openDataSet(floatDatasetName2))
+                    {
+                        writer.float32().writeMDArray(ds, arrayBlockWritten, blockIndex(blockIndex));
+                    }
                 }
             }
         }
@@ -1046,8 +1048,10 @@ public class HDF5RoundtripTest
         final long[] slicedBlockOffs2 = new long[]
             { 2, 6 };
         final IndexMap imap2 = new IndexMap().bind(0, 9);
-        writer.float32().writeSlicedMDArrayBlockWithOffset(floatDatasetName2, arraySliceWritten2,
-                slicedBlockOffs2, imap2);
+        try (HDF5DataSet ds = writer.object().openDataSet(floatDatasetName2))
+        {
+            writer.float32().writeMDArray(ds, arraySliceWritten2, slice(imap2).offset(slicedBlockOffs2));
+        }
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         for (int i = 0; i < 2; ++i)
@@ -1184,9 +1188,8 @@ public class HDF5RoundtripTest
             floatArrayWritten = baseArray.clone();
             for (int i = 0; i < 10; ++i)
             {
-                writer.float32().writeMDArraySlice(ds,
-                        new MDFloatArray(timesTwo(floatArrayWritten), sliceShape), new long[]
-                            { i, -1, -1 });
+                writer.float32().writeMDArray(ds,
+                        new MDFloatArray(timesTwo(floatArrayWritten), sliceShape), slice(i, -1, -1 ));
             }
         }
         writer.close();

@@ -514,6 +514,16 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             HDF5IntStorageFeatures features);
 
     /**
+     * Writes out a block or a slice of a multi-dimensional <code>short</code> array.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param params The parameter block specifying the block or slice to read from the array.
+     */
+    public void writeMDArray(HDF5DataSet dataSet, MDShortArray data,
+            HDF5ArrayBlockParams params);
+    
+    /**
      * Writes out a multi-dimensional <code>short</code> array. When creating many data sets with the same
      * features, this method will be faster than
      * {@link #writeMDArray(String, MDShortArray, HDF5IntStorageFeatures)}.

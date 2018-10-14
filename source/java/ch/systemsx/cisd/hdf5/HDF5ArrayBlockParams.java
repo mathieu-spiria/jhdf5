@@ -26,7 +26,9 @@ public final class HDF5ArrayBlockParams
 {
     int[] blockDimensions;
     
-    long[] offset;
+    long[] blockIndex;
+    
+    long[] blockOffset;
     
     long[] boundIndexArray;
     
@@ -37,17 +39,33 @@ public final class HDF5ArrayBlockParams
         return blockDimensions;
     }
 
+    long[] getOffset(int[] blockDimensions)
+    {
+        if (blockOffset == null)
+        {
+            if (blockDimensions == null)
+            {
+                throw new HDF5JavaException("No block dimensions set");
+            }
+            blockOffset = new long[blockDimensions.length];
+            if (blockIndex != null)
+            {
+                if (blockDimensions.length != blockIndex.length)
+                {
+                    throw new HDF5SpaceRankMismatch(blockDimensions.length, blockIndex.length);
+                }
+                for (int i = 0; i < blockOffset.length; ++i)
+                {
+                    blockOffset[i] = blockIndex[i] * blockDimensions[i];
+                }
+            }
+        }
+        return blockOffset;
+    }
+    
     long[] getOffset()
     {
-        if (blockDimensions == null)
-        {
-            return null;
-        }
-        if (offset == null)
-        {
-            offset = new long[blockDimensions.length];
-        }
-        return offset;
+        return getOffset(blockDimensions);
     }
 
     long[] getBoundIndexArray()
@@ -62,7 +80,7 @@ public final class HDF5ArrayBlockParams
     
     boolean hasBlock()
     {
-        return blockDimensions != null;
+        return blockDimensions != null || blockIndex != null || blockOffset != null;
     }
     
     boolean hasSlice()
@@ -93,19 +111,7 @@ public final class HDF5ArrayBlockParams
      */
     public HDF5ArrayBlockParams index(long... blockIndex)
     {
-        if (blockDimensions == null)
-        {
-            throw new HDF5JavaException("No block dimensions set");
-        }
-        if (blockDimensions.length != blockIndex.length)
-        {
-            throw new HDF5SpaceRankMismatch(blockDimensions.length, blockIndex.length);
-        }
-        offset = new long[blockDimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockIndex[i] * blockDimensions[i];
-        }
+        this.blockIndex = blockIndex;
         return this;
     }
     
@@ -116,15 +122,7 @@ public final class HDF5ArrayBlockParams
      */
     public HDF5ArrayBlockParams offset(long... offset)
     {
-        if (blockDimensions == null)
-        {
-            throw new HDF5JavaException("No block dimensions set");
-        }
-        if (blockDimensions.length != offset.length)
-        {
-            throw new HDF5SpaceRankMismatch(blockDimensions.length, offset.length);
-        }
-        this.offset = offset;
+        this.blockOffset = offset;
         return this;
     }
     

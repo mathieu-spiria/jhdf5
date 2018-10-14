@@ -59,8 +59,8 @@ public class HDF5ArrayBlockParamsBuilder
     }
 
     /**
-     * Creates a parameter that reads an array slice. The slice is defined by "bound indices", each of
-     * which is fixed to a given value. The data block read or written only contains the free
+     * Creates a parameter that reads or writes an array slice. The slice is defined by "bound indices", 
+     * each of which is fixed to a given value. The data block read or written only contains the free
      * (i.e. non-fixed) indices.
      * 
      * @param boundIndices The mapping of indices to index values which should be bound. For example
@@ -73,5 +73,30 @@ public class HDF5ArrayBlockParamsBuilder
         params.boundIndexMap = boundIndices;
         return params;
     }
+    
+    /**
+     * Creates a parameter that writes a block with given <var>blockIndex</var>.
+     * 
+     * @param blockIndex The block index in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     */
+    public static HDF5ArrayBlockParams blockIndex(long... blockIndex)
+    {
+        final HDF5ArrayBlockParams params = new HDF5ArrayBlockParams();
+        params.blockIndex = blockIndex;
+        return params;
+    }
 
+    /**
+     * Creates a parameter that writes a block with given <var>blockOffset</var>.
+     * 
+     * @param blockIndex The block index in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     */
+    public static HDF5ArrayBlockParams blockOffset(long... blockOffset)
+    {
+        final HDF5ArrayBlockParams params = new HDF5ArrayBlockParams();
+        params.blockOffset = blockOffset;
+        return params;
+    }
 }

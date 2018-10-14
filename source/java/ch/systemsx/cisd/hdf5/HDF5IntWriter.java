@@ -928,6 +928,48 @@ class HDF5IntWriter extends HDF5IntReader implements IHDF5IntWriter
     }
 
     @Override
+    public void writeMDArray(HDF5DataSet dataSet, MDIntArray data, HDF5ArrayBlockParams params)
+    {
+        assert dataSet != null;
+        assert data != null;
+        assert params != null;
+        
+        if (params.hasBlock())
+        {
+            if (params.hasSlice())
+            {
+                if (params.getBoundIndexArray() != null)
+                {
+                    writeSlicedMDArrayBlockWithOffset(dataSet, data, params.getOffset(data.dimensions()), 
+                            params.getBoundIndexArray());
+                } else
+                {
+                    writeSlicedMDArrayBlockWithOffset(dataSet, data, params.getOffset(data.dimensions()), 
+                            params.getBoundIndexMap());
+                }
+                return;
+            }
+
+            writeMDArrayBlockWithOffset(dataSet, data, params.getOffset(data.dimensions()));
+            return;
+        }
+
+        if (params.hasSlice())
+        {
+            if (params.getBoundIndexArray() != null)
+            {
+                writeMDArraySlice(dataSet, data, params.getBoundIndexArray());
+            } else
+            {
+                writeMDArraySlice(dataSet, data, params.getBoundIndexMap());
+            }
+            return;
+        }
+
+        writeMDArrayBlockWithOffset(dataSet, data, new long[data.rank()]);
+    }
+
+    @Override
     public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset)
     {

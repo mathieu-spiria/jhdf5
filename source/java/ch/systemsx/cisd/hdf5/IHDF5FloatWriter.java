@@ -511,6 +511,16 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
             HDF5FloatStorageFeatures features);
 
     /**
+     * Writes out a block or a slice of a multi-dimensional <code>float</code> array.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param params The parameter block specifying the block or slice to read from the array.
+     */
+    public void writeMDArray(HDF5DataSet dataSet, MDFloatArray data,
+            HDF5ArrayBlockParams params);
+    
+    /**
      * Writes out a multi-dimensional <code>float</code> array. When creating many data sets with the same
      * features, this method will be faster than
      * {@link #writeMDArray(String, MDFloatArray, HDF5FloatStorageFeatures)}.

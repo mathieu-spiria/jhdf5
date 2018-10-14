@@ -78,6 +78,11 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
      */
     public boolean exists(final String objectPath);
     
+    /**
+     * Opens a data set for reading (reader and writer) or writing (writer).
+     *  
+     * @param objectPath The name (with path) of the data set to open
+     */
     public HDF5DataSet openDataSet(final String objectPath);
 
     /**
