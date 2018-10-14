@@ -553,6 +553,22 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         return baseReader.runner.call(readCallable);
     }
 
+    MDShortArray readMDArray(final HDF5DataSet dataSet)
+    {
+        assert dataSet != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
+            {
+                @Override
+                public MDShortArray call(ICleanUpRegistry registry)
+                {
+                    return readShortMDArray(dataSet.getDataSetId(), registry);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
     MDShortArray readShortMDArray(long dataSetId, ICleanUpRegistry registry)
     {
         try
@@ -601,6 +617,72 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
             return new MDShortArray(data, MatrixUtils.concat(MDArray.toInt(spaceParams.dimensions),
                     arrayDimensions));
         }
+    }
+
+    @Override
+    public MDShortArray readMDArray(String objectPath, HDF5ArrayBlockParams params)
+    {
+        if (params.hasBlock())
+        {
+            if (params.hasSlice())
+            {
+                if (params.getBoundIndexArray() != null)
+                {
+                    return readSlicedMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexArray());
+                } else
+                {
+                    return readSlicedMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexMap());
+                }
+            }
+
+            return readMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset());
+        }
+
+        if (params.hasSlice())
+        {
+            if (params.getBoundIndexArray() != null)
+            {
+                return readMDArraySlice(objectPath, params.getBoundIndexArray());
+            } else
+            {
+                return readMDArraySlice(objectPath, params.getBoundIndexMap());
+            }
+        }
+
+        return readMDArray(objectPath);
+    }
+
+    @Override
+    public MDShortArray readMDArray(HDF5DataSet dataSet, HDF5ArrayBlockParams params)
+    {
+        if (params.hasBlock())
+        {
+            if (params.hasSlice())
+            {
+                if (params.getBoundIndexArray() != null)
+                {
+                    return readSlicedMDArrayBlockWithOffset(dataSet, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexArray());
+                } else
+                {
+                    return readSlicedMDArrayBlockWithOffset(dataSet, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexMap());
+                }
+            }
+
+            return readMDArrayBlockWithOffset(dataSet, params.getBlockDimensions(), params.getOffset());
+        }
+
+        if (params.hasSlice())
+        {
+            if (params.getBoundIndexArray() != null)
+            {
+                return readMDArraySlice(dataSet, params.getBoundIndexArray());
+            } else
+            {
+                return readMDArraySlice(dataSet, params.getBoundIndexMap());
+            }
+        }
+
+        return readMDArray(dataSet);
     }
 
     @Override

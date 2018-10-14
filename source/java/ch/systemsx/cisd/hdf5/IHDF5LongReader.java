@@ -276,6 +276,26 @@ public interface IHDF5LongReader
     public MDLongArray readMDArray(String objectPath);
 
     /**
+     * Reads part or all of a multi-dimensional <code>long</code> array from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param params The parameter block specifying the block or slice to read from the array.
+     * @return The data read from the data set.
+     */
+    public MDLongArray readMDArray(String objectPath, HDF5ArrayBlockParams params);
+
+    /**
+     * Reads part or all of a multi-dimensional <code>long</code> array from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param dataSet The data set to read from.
+     * @param params The parameter block specifying the block or slice to read from the array.
+     * @return The data read from the data set.
+     */
+    public MDLongArray readMDArray(HDF5DataSet dataSet, HDF5ArrayBlockParams params);
+
+    /**
      * Reads a slice of a multi-dimensional <code>long</code> array from the data set
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
      * given value. The returned data block only contains the free (i.e. non-fixed) indices.

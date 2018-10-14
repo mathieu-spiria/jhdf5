@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.*;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
@@ -724,7 +725,9 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final MDFloatArray arrayRead = reader.float32().readMDArray(floatDatasetName);
+        final MDFloatArray arrayRead2 = reader.float32().readMDArray(floatDatasetName, array());
         assertEquals(arrayWritten, arrayRead);
+        assertEquals(arrayWritten, arrayRead2);
         final IndexMap boundIndex1 = new IndexMap().bind(1, 0);
         final long[] boundIndex1Arr = new long[]
             { -1, 0, -1 };
@@ -750,41 +753,67 @@ public class HDF5RoundtripTest
             { 12f, 16f }, new int[]
             { 2 });
         assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1));
+        assertEquals(slice1, reader.float32().readMDArray(floatDatasetName, slice(boundIndex1)));
         assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1Arr));
+        assertEquals(slice1, reader.float32().readMDArray(floatDatasetName, slice(boundIndex1Arr)));
         assertEquals(slice1BlockOfs00,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 0, 0 }, boundIndex1));
         assertEquals(slice1BlockOfs00,
+                reader.float32().readMDArray(floatDatasetName, block(2, 2).slice(boundIndex1)));
+        assertEquals(slice1BlockOfs00,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 0, 0 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs00,
+                reader.float32().readMDArray(floatDatasetName, block(2, 2).slice(boundIndex1Arr)));
         assertEquals(slice1BlockOfs01,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 0, 1 }, boundIndex1));
         assertEquals(slice1BlockOfs01,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(0, 1).slice(boundIndex1)));
+        assertEquals(slice1BlockOfs01,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 0, 1 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs01,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(0, 1).slice(boundIndex1Arr)));
         assertEquals(slice1BlockOfs10,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 1, 0 }, boundIndex1));
         assertEquals(slice1BlockOfs10,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(1, 0).slice(boundIndex1)));
+        assertEquals(slice1BlockOfs10,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 1, 0 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs10,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(1, 0).slice(boundIndex1Arr)));
         assertEquals(slice1BlockOfs11,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 1, 1 }, boundIndex1));
         assertEquals(slice1BlockOfs11,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(1, 1).slice(boundIndex1)));
+        assertEquals(slice1BlockOfs11,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 1, 1 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs11,
+                reader.float32().readMDArray(floatDatasetName, 
+                        block(2, 2).offset(1, 1).slice(boundIndex1Arr)));
         assertEquals(slice2, reader.float32().readMDArraySlice(floatDatasetName, boundIndex2));
+        assertEquals(slice2, reader.float32().readMDArray(floatDatasetName, slice(boundIndex2)));
         assertEquals(slice2, reader.float32().readMDArraySlice(floatDatasetName, boundIndex2Arr));
+        assertEquals(slice2, reader.float32().readMDArray(floatDatasetName, slice(boundIndex2Arr)));
         reader.close();
     }
 
@@ -1033,6 +1062,10 @@ public class HDF5RoundtripTest
                             reader.float32().readMDArrayBlock(floatDatasetName, blockShape,
                                     blockIndex);
                     assertEquals(Arrays.toString(blockIndex), arrayBlockWritten, arrayRead);
+                    final MDFloatArray arrayRead2 =
+                            reader.float32().readMDArray(floatDatasetName, 
+                                    block(blockShape).index(blockIndex));
+                    assertEquals(Arrays.toString(blockIndex), arrayBlockWritten, arrayRead2);
                     // {0, 1, 1} is the first block we overwrote, { 1, 0, 1} the second block.
                     if (false == Arrays.equals(new long[]
                         { 0, 1, 1 }, blockIndex) && false == Arrays.equals(new long[]
@@ -1043,6 +1076,11 @@ public class HDF5RoundtripTest
                                 arrayBlockWritten,
                                 reader.float32().readMDArrayBlock(floatDatasetName2, blockShape,
                                         blockIndex));
+                        assertEquals(
+                                Arrays.toString(blockIndex),
+                                arrayBlockWritten,
+                                reader.float32().readMDArray(floatDatasetName2, 
+                                        block(blockShape).index(blockIndex)));
                     }
                 }
             }
@@ -1057,6 +1095,10 @@ public class HDF5RoundtripTest
                     reader.float32().readSlicedMDArrayBlock(fds2,
                             arraySliceWritten1.dimensions(), slicedBlock1, imap1);
             assertEquals(arraySliceWritten1, arraySliceRead1b);
+            final MDFloatArray arraySliceRead1c =
+                    reader.float32().readMDArray(fds2, 
+                            block(arraySliceWritten1.dimensions()).index(slicedBlock1).slice(imap1));
+            assertEquals(arraySliceWritten1, arraySliceRead1c);
             final MDFloatArray arraySliceRead2 =
                     reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName2,
                             arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
@@ -1065,6 +1107,10 @@ public class HDF5RoundtripTest
                     reader.float32().readSlicedMDArrayBlockWithOffset(fds2,
                             arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
             assertEquals(arraySliceWritten2, arraySliceRead2b);
+            final MDFloatArray arraySliceRead2c =
+                    reader.float32().readMDArray(fds2,
+                            block(arraySliceWritten2.dimensions()).offset(slicedBlockOffs2).slice(imap2));
+            assertEquals(arraySliceWritten2, arraySliceRead2c);
         }
         reader.close();
     }
