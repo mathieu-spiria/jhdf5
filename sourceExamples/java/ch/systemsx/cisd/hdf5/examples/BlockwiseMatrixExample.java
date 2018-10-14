@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5.examples;
 
-import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.block;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.slice;
 import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.blockIndex;
 
 import java.util.Random;
@@ -70,7 +70,7 @@ public class BlockwiseMatrixExample
             }
     
             // Read a 1d sliced block of size 10 where the first index is fixed
-            System.out.println(reader.int32().readMDArray("mydata", block(10).index(4).slice(30, -1)));
+            System.out.println(reader.int32().readMDArray("mydata", slice(30, -1).block(10).index(4)));
         }
     }
 
