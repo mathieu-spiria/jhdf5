@@ -16,11 +16,15 @@
 
 package ch.systemsx.cisd.hdf5.examples;
 
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.block;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.blockIndex;
+
 import java.util.Random;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.hdf5.HDF5DataSet;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5MDDataBlock;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -36,20 +40,22 @@ public class BlockwiseMatrixExample
     public static void main(String[] args)
     {
         Random rng = new Random();
-        int[][] mydata = new int[10][10];
+        MDIntArray mydata = new MDIntArray(new int[] { 10, 10 });
 
         // Write the integer matrix.
         try (IHDF5Writer writer = HDF5Factory.open("largeimatrix.h5"))
         {
             // Define the block size as 10 x 10.
-            writer.int32().createMatrix("mydata", 10, 10);
-            // Write 5 x 7 blocks.
-            for (int bx = 0; bx < 5; ++bx)
+            try (HDF5DataSet dataSet = writer.int32().createMDArrayAndOpen("mydata", new int[] { 10, 10 }))
             {
-                for (int by = 0; by < 7; ++by)
+                // Write 5 x 7 blocks.
+                for (int bx = 0; bx < 5; ++bx)
                 {
-                    fillMatrix(rng, mydata);
-                    writer.int32().writeMatrixBlock("mydata", mydata, bx, by);
+                    for (int by = 0; by < 7; ++by)
+                    {
+                        fillMatrix(rng, mydata);
+                        writer.int32().writeMDArray(dataSet, mydata, blockIndex(bx, by));
+                    }
                 }
             }
         }
@@ -64,20 +70,17 @@ public class BlockwiseMatrixExample
             }
     
             // Read a 1d sliced block of size 10 where the first index is fixed
-            System.out.println(reader.int32().readSlicedMDArrayBlock("mydata", new int[]
-                { 10 }, new long[]
-                { 4 }, new long[]
-                { 30, -1 }));
+            System.out.println(reader.int32().readMDArray("mydata", block(10).index(4).slice(30, -1)));
         }
     }
 
-    static void fillMatrix(Random rng, int[][] mydata)
+    static void fillMatrix(Random rng, MDIntArray mydata)
     {
-        for (int i = 0; i < mydata.length; ++i)
+        for (int i = 0; i < mydata.size(0); ++i)
         {
-            for (int j = 0; j < mydata[i].length; ++j)
+            for (int j = 0; j < mydata.size(1); ++j)
             {
-                mydata[i][j] = rng.nextInt();
+                mydata.set(rng.nextInt(), i, j);
             }
         }
     }
