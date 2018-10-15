@@ -33,6 +33,11 @@ public final class HDF5ArrayBlockParams
     long[] boundIndexArray;
     
     IndexMap boundIndexMap;
+    
+    HDF5ArrayBlockParams()
+    {
+        // Only HDF5ArrayBlockParamsBuilder can instantiate this class.
+    }
 
     int[] getBlockDimensions()
     {

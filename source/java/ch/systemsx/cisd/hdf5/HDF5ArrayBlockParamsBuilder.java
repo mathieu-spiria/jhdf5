@@ -21,6 +21,11 @@ package ch.systemsx.cisd.hdf5;
  */
 public class HDF5ArrayBlockParamsBuilder
 {
+    private HDF5ArrayBlockParamsBuilder()
+    {
+        // Cannot be instantiated.
+    }
+    
     /**
      * Creates a parameter that reads the complete array.
      */
