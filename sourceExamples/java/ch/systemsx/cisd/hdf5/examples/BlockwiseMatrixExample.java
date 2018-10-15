@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5.examples;
 
 import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.slice;
 import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.blockIndex;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.dims;
 
 import java.util.Random;
 
@@ -40,13 +41,13 @@ public class BlockwiseMatrixExample
     public static void main(String[] args)
     {
         Random rng = new Random();
-        MDIntArray mydata = new MDIntArray(new int[] { 10, 10 });
+        MDIntArray mydata = new MDIntArray(dims(10, 10));
 
         // Write the integer matrix.
         try (IHDF5Writer writer = HDF5Factory.open("largeimatrix.h5"))
         {
             // Define the block size as 10 x 10.
-            try (HDF5DataSet dataSet = writer.int32().createMDArrayAndOpen("mydata", new int[] { 10, 10 }))
+            try (HDF5DataSet dataSet = writer.int32().createMDArrayAndOpen("mydata", dims(10, 10)))
             {
                 // Write 5 x 7 blocks.
                 for (int bx = 0; bx < 5; ++bx)

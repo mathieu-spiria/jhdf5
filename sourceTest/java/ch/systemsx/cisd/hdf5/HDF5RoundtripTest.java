@@ -17,6 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.*;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.dims;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.ldims;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
@@ -1003,10 +1005,8 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String floatDatasetName = "/floatMatrix";
         final String floatDatasetName2 = "/floatMatrix2";
-        final long[] shape = new long[]
-            { 10, 10, 10 };
-        final int[] blockShape = new int[]
-            { 5, 5, 5 };
+        final long[] shape = ldims(10, 10, 10);
+        final int[] blockShape = dims(5, 5, 5);
         writer.float32().createMDArray(floatDatasetName, shape, blockShape);
         writer.float32().createMDArray(floatDatasetName2, shape, blockShape);
         final float[] flatArray = new float[MDArray.getLength(blockShape)];
@@ -1034,19 +1034,15 @@ public class HDF5RoundtripTest
         }
 
         final MDFloatArray arraySliceWritten1 = new MDFloatArray(new float[]
-            { 1000f, 2000f, 3000f, 4000f, 5000f }, new int[]
-            { 1, 5 });
-        final long[] slicedBlock1 = new long[]
-            { 4, 1 };
+            { 1000f, 2000f, 3000f, 4000f, 5000f }, dims(1, 5));
+        final long[] slicedBlock1 = ldims(4, 1);
         final IndexMap imap1 = new IndexMap().bind(1, 7);
         writer.float32().writeSlicedMDArrayBlock(floatDatasetName2, arraySliceWritten1,
                 slicedBlock1, imap1);
 
         final MDFloatArray arraySliceWritten2 = new MDFloatArray(new float[]
-            { -1f, -2f, -3f, -4f, -5f, -6f }, new int[]
-            { 3, 2 });
-        final long[] slicedBlockOffs2 = new long[]
-            { 2, 6 };
+            { -1f, -2f, -3f, -4f, -5f, -6f }, dims(3, 2));
+        final long[] slicedBlockOffs2 = ldims(2, 6);
         final IndexMap imap2 = new IndexMap().bind(0, 9);
         try (HDF5DataSet ds = writer.object().openDataSet(floatDatasetName2))
         {
@@ -1071,9 +1067,8 @@ public class HDF5RoundtripTest
                                     block(blockShape).index(blockIndex));
                     assertEquals(Arrays.toString(blockIndex), arrayBlockWritten, arrayRead2);
                     // {0, 1, 1} is the first block we overwrote, { 1, 0, 1} the second block.
-                    if (false == Arrays.equals(new long[]
-                        { 0, 1, 1 }, blockIndex) && false == Arrays.equals(new long[]
-                        { 1, 0, 1 }, blockIndex))
+                    if (false == Arrays.equals(ldims(0, 1, 1), blockIndex) 
+                            && false == Arrays.equals(ldims(1, 0, 1), blockIndex))
                     {
                         assertEquals(
                                 Arrays.toString(blockIndex),

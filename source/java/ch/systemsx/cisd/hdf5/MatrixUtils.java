@@ -27,12 +27,10 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * Utilities for working with primitive matrices.
- * <p>
- * <i>This is an internal API that should not be expected to be stable between releases!</i>
  * 
  * @author Bernd Rinn
  */
-final class MatrixUtils
+public final class MatrixUtils
 {
 
     private MatrixUtils()
@@ -40,6 +38,30 @@ final class MatrixUtils
         // Cannot be instantiated
     }
 
+    /**
+     * Helper method for creating <code>int[]</code> array for the block dimensions. 
+     */
+    public static int[] dims(int... dim)
+    {
+        return dim;
+    }
+    
+    /**
+     * Helper method for creating <code>long[]</code> array for the array dimensions. 
+     */
+    public static long[] dims(long... dim)
+    {
+        return dim;
+    }
+    
+    /**
+     * Helper method for creating <code>long[]</code> array for the array dimensions. 
+     */
+    public static long[] ldims(long... dim)
+    {
+        return dim;
+    }
+    
     static void checkMDArrayDimensions(final String name, final int[] dimensions,
             final MDAbstractArray<?> array)
     {
