@@ -18,5 +18,8 @@ rm -fR CMake-hdf5-$VERSION/hdf5-$VERSION/java/src/jni
 cp -af ../jni CMake-hdf5-$VERSION/hdf5-$VERSION/java/src/
 cp -af ../*.c CMake-hdf5-$VERSION/hdf5-$VERSION/java/src/jni/
 
-patch -p0 < ../cmake_set_hdf5_options.diff
-patch -p0 < ../cmake_add_sources.diff
+cd CMake-hdf5-$VERSION
+patch -p1 < ../../cmake_set_hdf5_options.diff
+
+cd hdf5-$VERSION
+patch -p2 < ../../../cmake_add_sources.diff

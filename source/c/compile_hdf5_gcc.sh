@@ -41,4 +41,4 @@ fi
 
 make -j $NCPU &> build.log
 make install &> install.log
-#make test &> test.log
+make test &> test.log

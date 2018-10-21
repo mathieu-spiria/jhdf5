@@ -1,7 +1,7 @@
-diff -ru hdf5-1.10.3/java/src/jni/h5dImp.c hdf5-1.10.3.patched/java/src/jni/h5dImp.c
---- hdf5-1.10.3/java/src/jni/h5dImp.c	2018-08-09 18:19:06.000000000 +0200
-+++ hdf5-1.10.3.patched/java/src/jni/h5dImp.c	2018-08-13 15:49:12.894709592 +0200
-@@ -295,21 +295,7 @@
+diff -ruN hdf5-1.10.4.sv/java/src/jni/h5dImp.c hdf5-1.10.4/java/src/jni/h5dImp.c
+--- hdf5-1.10.4.sv/java/src/jni/h5dImp.c	2018-09-10 16:43:41.000000000 +0200
++++ hdf5-1.10.4/java/src/jni/h5dImp.c	2018-10-20 22:55:44.073210246 +0200
+@@ -299,21 +299,7 @@
      if (buf == NULL) {
          h5nullArgument(env, "H5Dread:  buf is NULL");
      } /* end if */
@@ -23,7 +23,7 @@ diff -ru hdf5-1.10.3/java/src/jni/h5dImp.c hdf5-1.10.3.patched/java/src/jni/h5dI
              PIN_BYTE_ARRAY();
  
              if (buffP == NULL) {
-@@ -327,7 +313,6 @@
+@@ -331,7 +317,6 @@
                      UNPIN_BYTE_ARRAY(0); /* update java buffer for return */
                  } /* end else */
              } /* end else */
@@ -31,7 +31,7 @@ diff -ru hdf5-1.10.3/java/src/jni/h5dImp.c hdf5-1.10.3.patched/java/src/jni/h5dI
      } /* end else */
  
      return (jint)status;
-@@ -351,21 +336,7 @@
+@@ -355,21 +340,7 @@
      if (buf == NULL) {
          h5nullArgument(env, "H5Dwrite:  buf is NULL");
      } /* end if */
@@ -53,7 +53,7 @@ diff -ru hdf5-1.10.3/java/src/jni/h5dImp.c hdf5-1.10.3.patched/java/src/jni/h5dI
              PIN_BYTE_ARRAY();
              if (buffP == NULL) {
                  h5JNIFatalError(env, "H5Dwrite:  buf not pinned");
-@@ -379,7 +350,6 @@
+@@ -383,7 +354,6 @@
                  if (status < 0)
                      h5libraryError(env);
              } /* end else */
