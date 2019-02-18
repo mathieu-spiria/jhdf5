@@ -16,9 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.*;
-import static ch.systemsx.cisd.hdf5.MatrixUtils.dims;
-import static ch.systemsx.cisd.hdf5.MatrixUtils.ldims;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.array;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.block;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.blockIndex;
+import static ch.systemsx.cisd.hdf5.HDF5ArrayBlockParamsBuilder.slice;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
@@ -30,6 +31,8 @@ import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFL
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.dims;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.ldims;
 import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt32;
 import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt8;
 import static hdf.hdf5lib.HDF5Constants.H5T_ENUM;
@@ -44,6 +47,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -147,6 +151,7 @@ public class HDF5RoundtripTest
                 + libversion[2]);
 
         // Tests
+        test.testWriteToEmptyFile();
         test.testStrangeDataSetName();
         test.testCreateSomeDeepGroup();
         test.testGetGroupMembersIteratively();
@@ -488,6 +493,26 @@ public class HDF5RoundtripTest
         test.finalizeTest();
     }
 
+    @Test
+    public void testWriteToEmptyFile()
+    {
+        final File file = new File(workingDirectory, "testStrangeDataSetName.h5");
+        file.delete();
+        assertFalse(file.exists());
+        try
+        {
+            new FileOutputStream(file).close();
+        } catch (IOException e)
+        {
+            fail("Cannot touch file" + file.getAbsolutePath());
+        }
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
+        writer.writeString("a", "b");
+        assertEquals("b", writer.readString("a"));
+        writer.close();
+    }
+    
     @Test
     public void testStrangeDataSetName()
     {

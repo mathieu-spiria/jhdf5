@@ -211,7 +211,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 throw new HDF5FileNotFoundException(hdf5File, "File is not writable.");
             }
-            if (mdcGenerateImage == MDCImageGeneration.KEEP_MDC_IMAGE)
+            if (hdf5File.length() > 0 && mdcGenerateImage == MDCImageGeneration.KEEP_MDC_IMAGE)
             {
                 generateMDCImage = HDF5Factory.hasMDCImage(hdf5File);
             }
