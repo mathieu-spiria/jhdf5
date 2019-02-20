@@ -779,6 +779,12 @@ public class HDF5RoundtripTest
         final MDFloatArray slice2 = new MDFloatArray(new float[]
             { 12f, 16f }, new int[]
             { 2 });
+        final IndexMap boundIndex3 = new IndexMap().bind(2, 3).bind(0, 1).bind(1, 0);
+        final long[] boundIndex3Arr = new long[]
+            { 1, 0, 3 };
+        final MDFloatArray slice3 = new MDFloatArray(new float[]
+            { 12f }, new int[]
+            { 1 });
         assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1));
         assertEquals(slice1, reader.float32().readMDArray(floatDatasetName, slice(boundIndex1)));
         assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1Arr));
@@ -841,6 +847,10 @@ public class HDF5RoundtripTest
         assertEquals(slice2, reader.float32().readMDArray(floatDatasetName, slice(boundIndex2)));
         assertEquals(slice2, reader.float32().readMDArraySlice(floatDatasetName, boundIndex2Arr));
         assertEquals(slice2, reader.float32().readMDArray(floatDatasetName, slice(boundIndex2Arr)));
+        assertEquals(slice3, reader.float32().readMDArraySlice(floatDatasetName, boundIndex3));
+        assertEquals(slice3, reader.float32().readMDArray(floatDatasetName, slice(boundIndex3)));
+        assertEquals(slice3, reader.float32().readMDArraySlice(floatDatasetName, boundIndex3Arr));
+        assertEquals(slice3, reader.float32().readMDArray(floatDatasetName, slice(boundIndex3Arr)));
         reader.close();
     }
 
