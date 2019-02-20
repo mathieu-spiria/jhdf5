@@ -622,34 +622,11 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
     @Override
     public MDByteArray readMDArray(String objectPath, HDF5ArrayBlockParams params)
     {
-        if (params.hasBlock())
+        baseReader.checkOpen();
+        try (final HDF5DataSet dataSet = baseReader.openDataSet(objectPath))
         {
-            if (params.hasSlice())
-            {
-                if (params.getBoundIndexArray() != null)
-                {
-                    return readSlicedMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexArray());
-                } else
-                {
-                    return readSlicedMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset(), params.getBoundIndexMap());
-                }
-            }
-
-            return readMDArrayBlockWithOffset(objectPath, params.getBlockDimensions(), params.getOffset());
+            return readMDArray(dataSet, params);
         }
-
-        if (params.hasSlice())
-        {
-            if (params.getBoundIndexArray() != null)
-            {
-                return readMDArraySlice(objectPath, params.getBoundIndexArray());
-            } else
-            {
-                return readMDArraySlice(objectPath, params.getBoundIndexMap());
-            }
-        }
-
-        return readMDArray(objectPath);
     }
 
     @Override
