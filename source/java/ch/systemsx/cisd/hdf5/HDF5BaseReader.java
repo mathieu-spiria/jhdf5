@@ -859,18 +859,6 @@ class HDF5BaseReader
             final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
             ICleanUpRegistry registry)
     {
-        return tryGetBlockSpaceParameters(dataSetId, memoryOffset, memoryDimensions, offset,
-                blockDimensions, false, registry);
-    }
-
-    /**
-     * Returns the {@link DataSpaceParameters} for a block of the given <var>dataSetId</var> when
-     * they are mapped to a block in memory.
-     */
-    DataSpaceParameters tryGetBlockSpaceParameters(final long dataSetId, final int[] memoryOffset,
-            final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
-            final boolean nullWhenOutside, ICleanUpRegistry registry)
-    {
         assert memoryOffset != null;
         assert memoryDimensions != null;
         assert offset != null;
@@ -896,19 +884,11 @@ class HDF5BaseReader
             final long maxFileBlockSize = dimensions[i] - offset[i];
             if (maxFileBlockSize <= 0)
             {
-                if (nullWhenOutside)
-                {
-                    return null;
-                }
                 throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
             }
             final long maxMemoryBlockSize = memoryDimensions[i] - memoryOffset[i];
             if (maxMemoryBlockSize <= 0)
             {
-                if (nullWhenOutside)
-                {
-                    return null;
-                }
                 throw new HDF5JavaException("Memory offset " + memoryOffset[i] + " >= Size "
                         + memoryDimensions[i]);
             }
@@ -931,18 +911,6 @@ class HDF5BaseReader
     DataSpaceParameters getBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
             final int[] memoryDimensions, final long[] offset, final int[] blockDimensions)
     {
-        return tryGetBlockSpaceParameters(dataSet, memoryOffset, memoryDimensions, offset,
-                blockDimensions, false);
-    }
-
-    /**
-     * Returns the {@link DataSpaceParameters} for a block of the given <var>dataSet</var> when
-     * they are mapped to a block in memory.
-     */
-    DataSpaceParameters tryGetBlockSpaceParameters(final HDF5DataSet dataSet, final int[] memoryOffset,
-            final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
-            final boolean nullWhenOutside)
-    {
         assert dataSet != null;
         assert memoryOffset != null;
         assert memoryDimensions != null;
@@ -957,7 +925,7 @@ class HDF5BaseReader
         final long[] effectiveBlockDimensions;
 
         dataSpaceId = dataSet.getDataSpaceId();
-        final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
+        final long[] dimensions = dataSet.getDimensions();
         if (dimensions.length != blockDimensions.length)
         {
             throw new HDF5JavaException("Data Set is expected to be of rank "
@@ -969,19 +937,11 @@ class HDF5BaseReader
             final long maxFileBlockSize = dimensions[i] - offset[i];
             if (maxFileBlockSize <= 0)
             {
-                if (nullWhenOutside)
-                {
-                    return null;
-                }
                 throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
             }
             final long maxMemoryBlockSize = memoryDimensions[i] - memoryOffset[i];
             if (maxMemoryBlockSize <= 0)
             {
-                if (nullWhenOutside)
-                {
-                    return null;
-                }
                 throw new HDF5JavaException("Memory offset " + memoryOffset[i] + " >= Size "
                         + memoryDimensions[i]);
             }
