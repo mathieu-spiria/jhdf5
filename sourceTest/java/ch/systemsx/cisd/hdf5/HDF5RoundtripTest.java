@@ -182,10 +182,38 @@ public class HDF5RoundtripTest
         test.testBooleanArrayBlock();
         test.testFloatArrayBlockWithPreopenedDataSet();
         test.testFloatArraysFromTemplates();
-        test.testMDShortArrayRankMismatch();
-        test.testMDShortArrayRankMismatchDetached();
-        test.testMDLongArrayArrayIndexOutOfBounds();
-        test.testMDLongArrayOnReadArrayIndexOutOfBounds();
+        try
+        {
+            test.testMDShortArrayRankMismatch();
+            fail("Failed to detect space rank mismatch.");
+        } catch (HDF5SpaceRankMismatch ex)
+        {
+            // That is expected.
+        }
+        try
+        {
+            test.testMDShortArrayRankMismatchDetached();
+            fail("Failed to detect space rank mismatch.");
+        } catch (HDF5SpaceRankMismatch ex)
+        {
+            // That is expected.
+        }
+        try
+        {
+            test.testMDLongArrayArrayIndexOutOfBounds();
+            fail("Failed to detect array out of bounds.");
+        } catch (HDF5JavaException ex)
+        {
+            // That is expected.
+        }
+        try
+        {
+            test.testMDLongArrayOnReadArrayIndexOutOfBounds();
+            fail("Failed to detect array out of bounds.");
+        } catch (HDF5JavaException ex)
+        {
+            // That is expected.
+        }
         test.testFloatMDArraysDetachedDataSets();
         test.testFloatMDArraysFromTemplates();
         test.testBitFieldArray();
