@@ -280,7 +280,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
-    public void createArray(String objectPath, HDF5DataSetTemplate template)
+    public void createArray(final String objectPath, final HDF5DataSetTemplate template)
     {
         assert objectPath != null;
 
@@ -658,7 +658,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
-    public void writeMDArray(String objectPath, MDDoubleArray data, HDF5DataSetTemplate template)
+    public void writeMDArray(final String objectPath, final MDDoubleArray data, final HDF5DataSetTemplate template)
     {
         assert data != null;
         baseWriter.checkOpen();
@@ -786,7 +786,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
-    public void createMDArray(String objectPath, HDF5DataSetTemplate template)
+    public void createMDArray(final String objectPath, final HDF5DataSetTemplate template)
     {
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
@@ -823,7 +823,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
-    public HDF5DataSet createMDArrayAndOpen(String objectPath, HDF5DataSetTemplate template)
+    public HDF5DataSet createMDArrayAndOpen(final String objectPath, final HDF5DataSetTemplate template)
     {
         baseWriter.checkOpen();
         final ICallableWithCleanUp<HDF5DataSet> createRunnable = new ICallableWithCleanUp<HDF5DataSet>()

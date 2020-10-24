@@ -1038,7 +1038,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
      */
     HDF5DataSet createDataSet(final String objectPath, final long storageDataTypeId,
             final HDF5AbstractStorageFeatures features, final long[] dimensions,
-            final long[] chunkSizeOrNull, int elementLength)
+            final long[] chunkSizeOrNull, final int elementLength)
     {
         final ICallableWithCleanUp<HDF5DataSet> openDataSetCallable =
                 new ICallableWithCleanUp<HDF5DataSet>()
