@@ -465,6 +465,7 @@ public class HDF5DataSetRandomAccessFileTest
         {
             assertEquals(i, referenceArray[i], arrayRead[referenceArray.length + i]);
         }
+        writer.close();
         raFile.close();
     }
 
@@ -504,6 +505,7 @@ public class HDF5DataSetRandomAccessFileTest
         {
             assertEquals(i, referenceArray[i], arrayRead[referenceArray.length + i]);
         }
+        writer.close();
         raFile.close();
     }
 
