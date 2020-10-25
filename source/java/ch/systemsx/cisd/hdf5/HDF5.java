@@ -279,9 +279,7 @@ class HDF5
     public long openObject(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final long objectId =
-                isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
-                        : H5Oopen(fileId, path, H5P_DEFAULT);
+        final long objectId = H5Oopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -372,8 +370,7 @@ class HDF5
     public long openGroup(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final long groupId = isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
-                : H5Gopen(fileId, path, H5P_DEFAULT);
+        final long groupId = H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -932,8 +929,7 @@ class HDF5
     public long openDataSet(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final long dataSetId = isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
-                : H5Dopen(fileId, path, H5P_DEFAULT);
+        final long dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
         if (registry != null)
         {
             registry.registerCleanUp(new Runnable()
@@ -948,6 +944,7 @@ class HDF5
         return dataSetId;
     }
 
+    // TODO: remove!
     boolean isReference(String path)
     {
         return autoDereference && (path.charAt(0) == '\0');
@@ -1778,8 +1775,7 @@ class HDF5
     public long openDataType(long fileId, String name, ICleanUpRegistry registry)
     {
         checkMaxLength(name);
-        final long dataTypeId = isReference(name) ? H5Oopen_by_addr(fileId, Long.parseLong(name.substring(1)))
-                : H5Topen(fileId, name, H5P_DEFAULT);
+        final long dataTypeId = H5Topen(fileId, name, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override

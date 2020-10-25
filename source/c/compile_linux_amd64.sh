@@ -8,7 +8,7 @@ fi
 
 rm -fR build/jni
 rm -f build/libjhdf5.so
-cp -a jni build/
+cp -a build/hdf5-$VERSION/java/src/jni build/
 cp -a *.c build/jni/
 cd build
 cp hdf5-$VERSION/src/H5win32defs.h jni/

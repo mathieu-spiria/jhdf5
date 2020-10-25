@@ -40,7 +40,6 @@ public class HDF5LibraryException extends HDF5Exception {
     private final String hdf5ErrorStackLastElementString;
     
     private final long majorErrorNumber;
-
     private final long minorErrorNumber;
 
     /**
@@ -256,6 +255,9 @@ public class HDF5LibraryException extends HDF5Exception {
         else if (err_code == HDF5Constants.H5E_MOUNT) {
             return "file mount error";
         }
+        else if (err_code == HDF5Constants.H5E_CANTDELETEFILE) {
+            return "Unable to delete file";
+        }
         else if (err_code == HDF5Constants.H5E_SEEKERROR) {
             return "seek failed";
         }
@@ -347,7 +349,7 @@ public class HDF5LibraryException extends HDF5Exception {
             return "unrecognized message";
         }
         else if (err_code == HDF5Constants.H5E_CANTDELETE) {
-            return " Can't delete message";
+            return "Can't delete message";
         }
         else if (err_code == HDF5Constants.H5E_CANTOPENOBJ) {
             return "Can't open object";
