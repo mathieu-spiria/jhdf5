@@ -4,11 +4,13 @@ source version.sh
 PLATFORM="$1"
 PATCHES="$2"
 
-if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" -a "$PLATFORM" != "armv6l" ]; then
+if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" -a "$PLATFORM" != "armv6l" -a "$PLATFORM" != "aarch64" ]; then
   echo "Syntax: compile_hdf5.sh <platform>"
-  echo "where <platform> is one of i386, x86, amd64, x86_64, or armv6l"
+  echo "where <platform> is one of i386, x86, amd64, x86_64, aarch64, or armv6l"
   exit 1
 fi
+
+echo "type found"
 
 rm -fR build
 mkdir build
