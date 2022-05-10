@@ -10,8 +10,6 @@ if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a 
   exit 1
 fi
 
-echo "type found"
-
 rm -fR build
 mkdir build
 
