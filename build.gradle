@@ -1,3 +1,8 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
 apply from: 'javaproject.gradle'
 
 group='sis'
@@ -52,6 +57,7 @@ jar {
 
     from ("libs/") {
         include 'native/jhdf5/**/**/*'
+        include 'prod/*'
     }
 
     manifest {
@@ -200,6 +206,10 @@ task distributionZip(type: Zip, dependsOn: [jar, h5arCLIJar, javadocJar, sources
 
 }
 
+repositories {
+    mavenLocal()
+}
+
 if (project == project.rootProject)
 {
     publishing {
@@ -214,6 +224,25 @@ if (project == project.rootProject)
                 descriptor {
                     withXml {
                         asNode().dependencies.dependency.find { it.@org == 'rinn' }.replaceNode {}
+                    }
+                }
+            }
+
+            mavenJava(MavenPublication) {
+                from components.java
+                groupId = 'cisd'
+                artifactId = 'jhdf5'
+                version = '19.04.1'
+                artifacts {
+                    afterEvaluate {
+                        jar {
+                            classifier = null
+                            from sourceSets.main.output
+                        }
+                        javadocJar {
+                            classifier = 'javadoc'
+                            from javadoc.destinationDir
+                        }
                     }
                 }
             }
